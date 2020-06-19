@@ -12,23 +12,25 @@ import wave
 import struct
 
 #512 samples@44.1 kHz = 11.7ms = 0.00117s
-print(numpy.finfo('float64').max)# 1.79
-print(numpy.finfo('float64').min)# -1.79
-print(numpy.iinfo('int32').max)# 32767
-print(numpy.iinfo('int32').min)# -32768
-print(numpy.iinfo('int16').max)# 32767
-print(numpy.iinfo('int16').min)# -32768
-print(numpy.iinfo('int8').max)# 127
-print(numpy.iinfo('int8').min)# -128
+#print(numpy.finfo('float64').max)# 1.79
+#print(numpy.finfo('float64').min)# -1.79
+#print(numpy.iinfo('int32').max)# 32767
+#print(numpy.iinfo('int32').min)# -32768
+#print(numpy.iinfo('int16').max)# 32767
+#print(numpy.iinfo('int16').min)# -32768
+#print(numpy.iinfo('int8').max)# 127
+#print(numpy.iinfo('int8').min)# -128
 
 def CreateSinewave(sin_sample_rate, sin_frequency, sin_buffer_size):
     sin_time_array = numpy.arange(sin_buffer_size)
     sin_amplitude_array = numpy.int16(32767*numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
     return (sin_time_array, sin_amplitude_array)
+
 def CreateSinewave32Bit(sin_sample_rate, sin_frequency, sin_buffer_size):
     sin_time_array = numpy.arange(sin_buffer_size)
     sin_amplitude_array = numpy.int32(2147483647*numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
     return (sin_time_array, sin_amplitude_array)
+
 def CreateSquarewave(square_sample_rate, square_frequency, square_buffer_size):
     square_time_array = numpy.arange(square_buffer_size)
     square_amplitude_array = numpy.int16(32767*numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
@@ -40,6 +42,7 @@ def CreateSquarewave(square_sample_rate, square_frequency, square_buffer_size):
                 square_amplitude_array[sample] = -32767
     #print (square_amplitude_array)
     return (square_time_array, square_amplitude_array)
+
 def CreateWhitenoise(sample_rate,buffer_size):
     whitenoise_time_array = numpy.arange(buffer_size)
     freqs = numpy.abs(numpy.fft.fftfreq(buffer_size, 1/sample_rate))
@@ -66,9 +69,11 @@ def ConvertdBuTo16Bit(float_array_input):
     float_array_input = numpy.where(float_array_input > -1.736, float_array_input, -1.736)
     float_array_output = numpy.int16(float_array_input * ((2 ** 15 - 1)/1.736))
     return float_array_output
+
 def Convert16BitTodBu(int_array_input):
     float_array_output = numpy.float64((int_array_input/32767)*1.736)
     return float_array_output
+
 def Dither16BitTo8Bit(int_array_input):
     rectangular_dither_array = numpy.random.randint(-1, 1, size=int_array_input.size)
     int_array_dithered = numpy.around(int_array_input / 256, decimals=0).astype('int16')
@@ -78,6 +83,7 @@ def Dither16BitTo8Bit(int_array_input):
     int_array_dithered.astype('int8')
     # int_array_output = (int_array_dithered*256).astype('int16')
     return int_array_dithered
+
 def Dither32BitTo16Bit(int_array_input):
     rectangular_dither_array = numpy.random.randint(-1, 1, size=int_array_input.size)
     int_array_dithered = numpy.around(int_array_input / 65535, decimals=0).astype('int32')
@@ -87,6 +93,20 @@ def Dither32BitTo16Bit(int_array_input):
     int_array_dithered = int_array_dithered.astype('int16')
     # int_array_output = (int_array_dithered*65535).astype('int32')
     return int_array_dithered
+
+#BSD Licence
+#Not Tested!
+def Import24BitWavTo16Bit(wav_file,data):
+    if sampwidth != 3:
+        print("wav_file is not 24-Bit! Cannot perform operation.")
+        return
+    else:
+        a = numpy.empty((num_samples, nchannels, 4), dtype=numpy.uint8)
+        raw_bytes = numpy.fromstring(data, dtype=numpy.uint8)
+        a[:, :, :sampwidth] = raw_bytes.reshape(-1, nchannels, sampwidth)
+        a[:, :, sampwidth:] = (a[:, :, sampwidth - 1:sampwidth] >> 7) * 255
+        result = a.view('<i4').reshape(a.shape[:-1])
+        return result
 
 def InfodBV(float_array_input):
     count = 0
@@ -98,6 +118,7 @@ def InfodBV(float_array_input):
     amplitude = average_sample_value/1
     dBV = 20 * math.log10(amplitude)
     return dBV
+
 def InfodBV16Bit(int_array_input):
     count = 0
     added_sample_value = 0.0
@@ -108,30 +129,27 @@ def InfodBV16Bit(int_array_input):
     amplitude = average_sample_value/32767
     dB16 = 20 * math.log10(amplitude)
     return dB16
+
 def XaxisForMatplotlib(any_array_input):
     any_array_output = numpy.arange(any_array_input.size)
     return any_array_output
+
 #NOT DONE!
-def VolumeIncrease16Bit(float_array_input, gain_change):
+def VolumeIncrease16Bit(int_array_input, gain_change):
     count = 0
     added_sample_value = 0.0
     average_sample_value = 0.0
-    audio_array = numpy.where(audio_array > 0, audio_array, audio_array * (-1))
-    average_sample_value = audio_array.sum() / audio_array.size
+    int_array_input = numpy.where(int_array_input > 0, int_array_input, int_array_input * (-1))
+    average_sample_value = int_array_input.sum() / int_array_input.size
     amplitude = average_sample_value / 32767
     dB16 = 20 * math.log10(amplitude)
     dB16 = db16 + gain_change
-
-def InvertSignal(int_array_input):
-    int_array_output = numpy.invert(int_array_input)
-    return(int_array_output)
-
 
 def MonoWavToNumpy16BitInt(wav_file_path):
     wav_file = wave.open(wav_file_path)
     samples = wav_file.getnframes()
     audio = wav_file.readframes(samples)
-    audio_as_numpy_array = np.frombuffer(audio, dtype=np.int16)
+    audio_as_numpy_array = numpy.frombuffer(audio, dtype=numpy.int16)
     return(audio_as_numpy_array)
 def Numpy16BitIntToMonoWav(filename, data):
     """
@@ -212,21 +230,42 @@ else:
         fid.write(data.tostring())
 
 
+
+
+def InvertSignal(int_array_input):
+    int_array_output = numpy.invert(int_array_input)
+    return(int_array_output)
+
+def max_possible_amplitude(int_array_input):
+    bits = int_array_input.sample_width * 8
+    max_possible_val = (2 ** bits)
+
+    # since half is above 0 and half is below the max amplitude is divided
+    return max_possible_val / 2
+
+#Pydub MIT Licence
+def EffectCompressor(int_array_input, threshold=-10.0, ratio=4.0, attack=5.0, release=50.0):
+    db_array_input = numpy.float32(10 ** (threshold / 20))
+    db_array_int = numpy.int16(db_array_input*32767)
+    print(db_array_int)
+
+
+
 x,y = CreateWhitenoise(44100,512)
 x2,y2 = CreateSinewave(44100,100,512)
 x3,y3 = CreateSquarewave(44100,1000,512)
-
-
-
+y4 = MonoWavToNumpy16BitInt('testmusic.wav')
 
 y22=copy.deepcopy(y2)
 #Numpy16BitIntToMonoWav('test.wav',y22)
 start = timeit.default_timer()
+y4=EffectCompressor(y4)
 stop = timeit.default_timer()
 print('Time: ', (stop - start)*1000, 'ms')
 
+#pyplot.plot(XaxisForMatplotlib(y4),y4)
 #pyplot.plot(x, y)
-pyplot.plot(XaxisForMatplotlib(y2),y2)
+#pyplot.plot(XaxisForMatplotlib(y2),y2)
 #pyplot.plot(x3,y3)
 #pyplot.plot(512,y22)
 
