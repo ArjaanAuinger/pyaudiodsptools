@@ -34,13 +34,7 @@ def CreateSinewave32Bit(sin_sample_rate, sin_frequency, sin_buffer_size):
 def CreateSquarewave(square_sample_rate, square_frequency, square_buffer_size):
     square_time_array = numpy.arange(square_buffer_size)
     square_amplitude_array = numpy.int16(32767*numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
-    #print (square_amplitude_array)
-    for sample in square_time_array:
-            if square_amplitude_array[sample] > 0:
-                square_amplitude_array[sample] = 32767
-            if square_amplitude_array[sample] < 0:
-                square_amplitude_array[sample] = -32767
-    #print (square_amplitude_array)
+    square_amplitude_array = numpy.where(square_amplitude_array>0,32767,-32767)
     return (square_amplitude_array)
 
 def CreateWhitenoise(sample_rate,buffer_size):
@@ -251,7 +245,7 @@ def EffectCompressor(int_array_input, threshold=-10.0, ratio=4.0, attack=5.0, re
     print(db_array_int)
 
 class EffectLimiter:
-    def __init__(self, attack_coeff, release_coeff, delay, threshold):
+    def __init__(self, threshold_in_db, attack_coeff=0.9, release_coeff=0.992, delay=10):
         self.delay_index = 0
         self.envelope = 0
         self.gain = 1
@@ -259,7 +253,8 @@ class EffectLimiter:
         self.delay_line = numpy.zeros(delay)
         self.release_coeff = release_coeff
         self.attack_coeff = attack_coeff
-        self.threshold = threshold
+        self.threshold = numpy.int16((10 ** (threshold_in_db/20))*32767)
+        print(self.threshold)
 
     def limit(self, signal):
         for idx, sample in enumerate(signal):
@@ -283,23 +278,43 @@ class EffectLimiter:
         return signal
 
 
+
+def EffectHardDistortion(int_array_input):
+    hard_limit = 32767
+    linear_limit = 32000  # -3 dB
+    clip_limit = linear_limit + int(numpy.pi / 2 * (hard_limit - linear_limit))
+    sign = copy.deepcopy(int_array_input)
+    sign = numpy.where(int_array_input>=0,1,-1)
+    amplitude = numpy.absolute(int_array_input)
+    amplitude = numpy.where(amplitude <= linear_limit, amplitude,hard_limit*sign)
+    scale = hard_limit - linear_limit
+    compression = scale * numpy.sin(numpy.float32(amplitude - linear_limit) / scale)
+    output = numpy.int16((linear_limit + numpy.int16(compression)) * sign)
+    return output
+
+
+
+
+
+
+
 #y = CreateWhitenoise(44100,512)
-#y3 = CreateSquarewave(44100,1000,512)
+
+sine = CreateSinewave(44100,100,512)
 music = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_copy = copy.deepcopy(music)
-print(music_copy)
-sine = CreateSinewave(48000,100,512)
-limiter = EffectLimiter(0.9, 0.99, 10, 10000)
+
+limiter = EffectLimiter(-2.0)
 
 #Numpy16BitIntToMonoWav('test.wav',y22)
 start = timeit.default_timer()
-limiter.limit(music_copy)
-Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+y3 = CreateSquarewave(44100,1000,512)
+#Numpy16BitIntToMonoWav44kHz("output.wav",sine)
 stop = timeit.default_timer()
 print('Time: ', (stop - start)*1000, 'ms')
 
-pyplot.plot(XaxisForMatplotlib(sine),sine)
-#pyplot.plot(XaxisForMatplotlib(y5),y5)
+#pyplot.plot(XaxisForMatplotlib(sine),sine)
+pyplot.plot(XaxisForMatplotlib(y3),y3)
 #pyplot.plot(XaxisForMatplotlib(y6),y6)
 
 
