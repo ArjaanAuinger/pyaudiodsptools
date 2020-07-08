@@ -278,10 +278,34 @@ class EffectLimiter:
         return signal
 
 
+class EffectTremolo:
+    def __init__(self,tremolo_depth,lfo_in_hertz=4.5):
+        self.sin_sample_rate = 44100
+        self.sin_time_array = numpy.arange(numpy.float32(self.sin_sample_rate/lfo_in_hertz))
+        self.sin_lfo = numpy.float32((((numpy.sin(2 * numpy.pi * lfo_in_hertz*self.sin_time_array/self.sin_sample_rate)
+                                        /2)+0.5)*tremolo_depth)+(1-tremolo_depth))
+        self.lfo_length = len(self.sin_lfo)
+        self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)
+
+    def tremolo(self,int_array_input):
+        current_input_lenght = len(int_array_input)
+        while len(self.sin_lfo_copy) < len(int_array_input):
+            self.sin_lfo_copy = numpy.append(self.sin_lfo_copy,self.sin_lfo)
+        self.sin_lfo_chunk = self.sin_lfo_copy[:current_input_lenght]
+        self.sin_lfo_copy = self.sin_lfo_copy[-(len(self.sin_lfo_copy)-current_input_lenght):]
+
+        print(len(self.sin_lfo_chunk))
+        print(current_input_lenght)
+        numpy.multiply(int_array_input,self.sin_lfo_chunk, out=int_array_input, dtype='float32', casting='unsafe')
+        int_array_output = int_array_input.astype('int16')
+        return int_array_output
+
+    def lfo_reset(self):
+        self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)
 
 def EffectHardDistortion(int_array_input):
     hard_limit = 32767
-    linear_limit = 32000  # -3 dB
+    linear_limit = 32000
     clip_limit = linear_limit + int(numpy.pi / 2 * (hard_limit - linear_limit))
     sign = copy.deepcopy(int_array_input)
     sign = numpy.where(int_array_input>=0,1,-1)
@@ -299,22 +323,31 @@ def EffectHardDistortion(int_array_input):
 
 
 #y = CreateWhitenoise(44100,512)
-
-sine = CreateSinewave(44100,100,512)
+#y3 = CreateSquarewave(44100,1000,512)
+sine_full = CreateSinewave(44100,100,8820)
 music = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_copy = copy.deepcopy(music)
+#sine,sine2,sine3,sine4 = numpy.split(sine_full,4)
 
-limiter = EffectLimiter(-2.0)
+tremolo = EffectTremolo(0.5)
 
 #Numpy16BitIntToMonoWav('test.wav',y22)
 start = timeit.default_timer()
-y3 = CreateSquarewave(44100,1000,512)
+wave = tremolo.tremolo(sine_full)
+#limiter.limit(sine2)
+#limiter.limit(sine3)
+#limiter.limit(sine4)
+#sine_add = numpy.append(sine,sine2)
+#sine_add = numpy.append(sine_add,sine3)
+#sine_add = numpy.append(sine_add,sine4)
 #Numpy16BitIntToMonoWav44kHz("output.wav",sine)
 stop = timeit.default_timer()
 print('Time: ', (stop - start)*1000, 'ms')
 
 #pyplot.plot(XaxisForMatplotlib(sine),sine)
-pyplot.plot(XaxisForMatplotlib(y3),y3)
+#pyplot.plot(XaxisForMatplotlib(y3),y3)
+#pyplot.plot(XaxisForMatplotlib(sine), sine)
+pyplot.plot(XaxisForMatplotlib(wave),wave)
 #pyplot.plot(XaxisForMatplotlib(y6),y6)
 
 
