@@ -5,12 +5,12 @@ import time
 import timeit
 import numpy
 import math
-import EffectFilter
+from Filter import CreateLowCutFilter, CreateHighCutFilter, peaking_filter
 
 
 
 import matplotlib.pyplot as pyplot
-from scipy import signal
+#from scipy import signal
 #from scipy.fftpack import fftfreq, irfft, rfft
 import copy
 import wave
@@ -247,6 +247,7 @@ def InvertSignal(int_array_input):
 
 #Still need to add clipping
 def MixSignals(*args):
+    mixed_signal = numpy.zeros(len(args[0]))
     for signal in args:
         try:
             mixed_signal = mixed_signal + signal
@@ -254,10 +255,7 @@ def MixSignals(*args):
             raise Exception("Something went wrong. Make sure, that the Numpy arrays are equal in length.")
     return mixed_signal
 
-def EffectCompressor(int_array_input, threshold=-10.0, ratio=4.0, attack=5.0, release=50.0):
-    db_array_input = numpy.float32(10 ** (threshold / 20))
-    db_array_int = numpy.int16(db_array_input*32767)
-    print(db_array_int)
+
 
 class EffectLimiter:
     def __init__(self, threshold_in_db, attack_coeff=0.9, release_coeff=0.992, delay=10):
@@ -315,40 +313,6 @@ class EffectTremolo:
     def lfo_reset(self):
         self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)
 
-#class Effect3BandEQ:
-    #def __init__(selfhi_gain=0,mid_gain=0,low_gain=0):
-
-def EQ(int_array_input):
-    int_array_input_length = numpy.int16(len(int_array_input))
-
-    fs = 1000
-    t = numpy.linspace(0, 1000 / fs, 1000, endpoint=False)
-    f = 3.0  # Frequency in Hz
-    A = 100.0  # Amplitude in Unit
-    s = A * numpy.sin(2 * numpy.pi * f * t)  # Signal
-    dt = 1 / fs
-
-    W = fftfreq(s.size, d=dt)
-    f_signal = rfft(s)
-
-    cut_f_signal = f_signal.copy()
-    #cut_f_signal[(numpy.abs(W) > 3)] = 0  # cut signal above 3Hz
-
-    cs = irfft(cut_f_signal)
-
-    #int_array_input = (int_array_input.astype('float32')/32768)+1
-    #x = np.arange(0, 10, 10 / len(int_array_input))
-    #freqs = np.fft.fftfreq(len(x), .01)
-    #n = int_array_input.size
-    #int_array_input = numpy.where(int_array_input<=0,1,int_array_input)
-    #int_array_input = numpy.fft.fftfreq(n,d=44100/1)
-    #print (int_array_input)
-    #int_array_input_fft = numpy.fft.fft(int_array_input)[0:int_array_input_length]
-    #int_array_input_fft = numpy.absolute(int_array_input_fft)
-    freq = numpy.int16(44100 * numpy.arange(int_array_input_length) / (int_array_input_length*2))
-    #print(freq)# frequency vector
-    #int_array_input_fft = numpy.fft.ifft(int_array_input_fft)
-    return cs,freq
 
 def EffectHardDistortion(int_array_input):
     hard_limit = 32767
@@ -366,20 +330,85 @@ def EffectHardDistortion(int_array_input):
 
 
 
+class EQ3Band:
+    def __init__(self):
+        self.dBgain = 6.0
+        self.A = numpy.sqrt(10**(self.dBgain/20))
+        self.Fs = 44100.0
+        self.Pi = numpy.pi
+        self.f0 = 200.0
+        self.Q = 1.5;
+        self.w0 = 2 * numpy.pi * self.f0 / self.Fs
+        self.alpha = numpy.sin(self.w0) / (2 * self.Q)
+        """
+        self.a0 = 1 + self.alpha
+        self.a1 = -2 * numpy.cos(self.w0)
+        self.a2 = 1 - self.alpha
+        self.b0 = (1 + numpy.cos(self.w0)) / 2
+        self.b1 = -(1 + numpy.cos(self.w0))
+        self.b2 = (1 + numpy.cos(self.w0)) / 2
+        """
+        self.a0 = (self.A+1) + (self.A-1)*numpy.cos(self.w0) + 2*numpy.sqrt(self.A)*self.alpha
+        self.a1 = -2*((self.A-1) + (self.A+1)*numpy.cos(self.w0))
+        self.a2 = (self.A+1) + (self.A-1)*numpy.cos(self.w0) - 2*numpy.sqrt(self.A)*self.alpha
+        self.b0 = self.A*((self.A+1) - (self.A-1)*numpy.cos(self.w0) + 2*numpy.sqrt(self.A)*self.alpha )
+        self.b1 = 2*self.A*( (self.A-1) - (self.A+1)*numpy.cos(self.w0))
+        self.b2 = self.A*( (self.A+1) - (self.A-1)*numpy.cos(self.w0) - 2*numpy.sqrt(self.A)*self.alpha)
+
+    def processing (self,int_array_input):
+        I = 0
+       # int_array_input=int_array_input.astype('float32')
+        #int_array_input = int_array_input/32767
+        #int_array_input_copy = copy.deepcopy(int_array_input)
+        int_array_input = int_array_input.astype('float32')
+        PrevSample = numpy.array([int_array_input[2],int_array_input[1],int_array_input[0]])
+
+        while (I <= len(int_array_input)):
+            #print (len(int_array_input))
+            PrevSample[2] = PrevSample[1]
+            PrevSample[1] = PrevSample[0]
+            PrevSample[0] = int_array_input[I]
+            int_array_input[I] = (self.b0/self.a0 * PrevSample[0]) + (self.b1 / self.a0 * PrevSample[1]) + (self.b2 / self.a0 * PrevSample[2]) - (self.a1 / self.a0 * int_array_input[I - 1]) - (self.a2 / self.a0 * int_array_input[I - 2])
+            I = I + 1 #increment the counter I by adding
+            if (I == len(int_array_input)):
+                break
+        #int_array_input = int_array_input *32767
+        #int_array_input = int_array_input.astype('int16')
+        int_array_input = int_array_input.astype('int16')
+        return int_array_input
+
+
+
+
+
+
+
+
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
-start = timeit.default_timer()
-sine_full = CreateSinewave(44100,4000,512)
+
+sine_full = CreateSinewave(44100,1000,512)
+
 music = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_copy = copy.deepcopy(music)
+music_copy=VolumeChange16Bit(music_copy,-6)
 #sine,sine2,sine3,sine4 = numpy.split(sine_full,4)
-
 #sos = EffectFilter.iirfilter(2, 400, rs=60, btype='high', analog = False, ftype = 'butter', fs = 44100, output = 'sos')
 #w, h = EffectFilter.sosfreqz(sos, 44100, fs=44100)"""
-fir_coeff = EffectFilter.firwin(29, 800.0/22050.0, pass_zero='highpass')
+#fir_coeff = Filter.firwin(29, 400.0/22050.0, pass_zero='highpass')
 
-filtered = EffectFilter.lfilter(fir_coeff, 1.0, music_copy)
+#filtered = Filter.lfilter(fir_coeff, 1.0, sine_full)
+#filter1 = CreateLowCutFilter(1000.0)
+#w,h = peaking_filter()
+
+filtertest = EQ3Band()
+
+
+start = timeit.default_timer()
+filteredtest = filtertest.processing(sine_full)
+
 stop = timeit.default_timer()
+
 print('Time: ', (stop - start)*1000, 'ms')
 
 #fig = pyplot.figure()
@@ -399,15 +428,18 @@ print('Time: ', (stop - start)*1000, 'ms')
 #sine_add = numpy.append(sine,sine2)
 #sine_add = numpy.append(sine_add,sine3)
 #sine_add = numpy.append(sine_add,sine4)
-filtered = filtered.astype('int16')
-print(filtered.dtype)
-Numpy16BitIntToMonoWav44kHz("output.wav",filtered)
+#filtered_signal = filtered_signal.astype('int16')
+#Numpy16BitIntToMonoWav44kHz("output.wav",filteredtest)
 
 
 #pyplot.plot(XaxisForMatplotlib(sine),sine)
 #pyplot.plot(XaxisForMatplotlib(y3),y3)
 #pyplot.plot(XaxisForMatplotlib(sine), sine)
-pyplot.plot(filtered)
+#pyplot.plot(sine_summed)
+pyplot.plot(sine_full)
+#pyplot.plot(sine_full_2)
+#pyplot.plot(music_copy)
+#pyplot.plot(filteredtest)
 pyplot.show()
 #pyplot.plot(XaxisForMatplotlib(y6),y6)
 
