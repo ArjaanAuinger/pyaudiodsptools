@@ -48,13 +48,6 @@ class CreateHighCutFilter:
         return filtered
 
 
-def peaking_filter():
-    b, a = peaking(0.2, dBgain=12, Q=0.3, type='half', analog=False)
-    w, h = freqz(b, a, 10000)
-    return w,h
-
-
-
 """########################################################################################
 All functions and classes below this line are from Scipy. Some have been slightly modified.
 ###########################################################################################"""

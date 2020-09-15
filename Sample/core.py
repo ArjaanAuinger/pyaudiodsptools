@@ -5,7 +5,8 @@ import time
 import timeit
 import numpy
 import math
-from Filter import CreateLowCutFilter, CreateHighCutFilter, peaking_filter
+from Filter import CreateLowCutFilter, CreateHighCutFilter
+from EffectCompressor import CreateCompressor
 
 
 
@@ -451,11 +452,14 @@ class EQ3Band:
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-sine_full = CreateSinewave(44100,200,512)
+sine_full = CreateSinewave(44100,200,2048)
 
 music = MonoWavToNumpy16BitInt('testmusic_mono.wav')
+music = music[0:4096]
 music_copy = copy.deepcopy(music)
-sine_full = VolumeChange16Bit(sine_full,-6)
+#music = numpy.arange(0,32767,1)
+#sine_copy = copy.deepcopy(sine_full)
+#sine_full = VolumeChange16Bit(sine_full,-1)
 #sine,sine2,sine3,sine4 = numpy.split(sine_full,4)
 #sos = EffectFilter.iirfilter(2, 400, rs=60, btype='high', analog = False, ftype = 'butter', fs = 44100, output = 'sos')
 #w, h = EffectFilter.sosfreqz(sos, 44100, fs=44100)"""
@@ -465,12 +469,14 @@ sine_full = VolumeChange16Bit(sine_full,-6)
 #filter1 = CreateLowCutFilter(1000.0)
 #w,h = peaking_filter()
 
-filtertest = EQ3Band()
-
+#filtertest = EQ3Band()
 #filteredtest = sine_full
+comptest = CreateCompressor()
 start = timeit.default_timer()
-filteredtest = filtertest.processing(sine_full)
-print(filteredtest)
+#filteredtest = filtertest.processing(sine_full)
+#print(filteredtest)
+
+music_copy = comptest.applycompressor(music_copy)
 
 stop = timeit.default_timer()
 
@@ -494,17 +500,22 @@ print('Time: ', (stop - start)*1000, 'ms')
 #sine_add = numpy.append(sine_add,sine3)
 #sine_add = numpy.append(sine_add,sine4)
 #filtered_signal = filtered_signal.astype('int16')
-Numpy16BitIntToMonoWav44kHz("output.wav",filteredtest)
 
-
+#sine_copy = sine_copy * 32767
+#sine_copy = sine_copy.astype('int16')
+music_copy = music_copy*32767
+music_copy = music_copy.astype('int16')
+Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 #pyplot.plot(XaxisForMatplotlib(sine),sine)
 #pyplot.plot(XaxisForMatplotlib(y3),y3)
 #pyplot.plot(XaxisForMatplotlib(sine), sine)
 #pyplot.plot(sine_summed)
 #pyplot.plot(music_copy)
-pyplot.plot(filteredtest)
-#pyplot.plot(sine_full_2)
-#pyplot.plot(music_copy)
+#pyplot.plot(sine_full)
+#pyplot.plot(apply_compression*32767)
+pyplot.plot(music)
+pyplot.plot(music_copy)
+
 #pyplot.plot(filteredtest)
 pyplot.show()
 #pyplot.plot(XaxisForMatplotlib(y6),y6)
