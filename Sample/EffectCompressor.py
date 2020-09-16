@@ -59,7 +59,7 @@ import array
 
 
 class CreateCompressor:
-    def __init__(self,threshold_in_db=-15,ratio=0.60,attack=0.1,release=0.1):
+    def __init__(self,threshold_in_db=-15,ratio=0.60,attack=3.1,release=30.1):
         self.ratio = ratio
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
         self.attack_window = numpy.zeros(int((44100 / 1000) * attack),dtype="float32")
@@ -69,16 +69,12 @@ class CreateCompressor:
         self.release_window = numpy.zeros(int((44100 / 1000) * release), dtype="float32")
         self.release_envelope = numpy.linspace(self.ratio,1.0, num=len(self.release_window), dtype="float32")
         self.counter_freeze = 0
-        #print(self.attack_envelope)
-        #print(self.release_envelope)
-        #self.compression_envelope = numpy.ndarray()
+        self.x = 0
+        self.y = 0
+        self.comp_state ="Resting"
+        # x = attack envelope counter
+        # y = release envelope counter
 
-    #def _createenvelope(self,bool_numpy_array_input,start=0):
-        #for sample in bool_numpy_array_input:
-            #if sample:
-
-            #yield sample, bool_numpy_array_input
-            #start += 1
 
     def applycompressor(self,int_array_input):
         compression_envelope = numpy.ones(len(int_array_input),dtype="float32")
@@ -90,70 +86,90 @@ class CreateCompressor:
         release_break = None
         full_envelope = True
         counter_freeze = False
-        comp_state = "Nothing"
+        freeze_params = False
+        #comp_state = "Nothing"
 
         counter = 0
-        x=0
-        y=0
+        #x=0
+        #y=0
         x_max=len(self.attack_envelope)
         y_max=len(self.release_envelope)
+        test = len(int_array_input)
+        print (test)
 
         while counter < int(len(int_array_input_bool_threshold)):
-            #if counter < len(int_array_input):
+
+            #if counter == 0:
                 #counter += 1
-            if counter == 0:
-                counter += 1
-                continue
+                #continue
 
-            if counter == 1000:
-                print("Stop")
-
-            #x = attack envelope counter
-            #y = release envelope counter
-            if int_array_input_bool_threshold[counter] == True:
-                if full_envelope == True:
-                    x=0
-                else:
-                    x=x_max-int(y*(x_max/y_max))
+            if int_array_input_bool_threshold[counter] == True or self.x != 0 or self.y != 0:
+                if full_envelope == True and self.comp_state == "Resting":
+                    self.x=0
+                    self.comp_state="Attack"
+                if full_envelope == False and self.comp_state =="Release":
+                    self.x=x_max-int(self.y*(x_max/y_max))
                     counter_freeze = False
+                    self.comp_state = "Attack"
+
                 #Attack
-                while x < x_max:
+                while self.x < x_max and self.comp_state =="Attack":
                     if int_array_input[counter] >= 0.0:
-                        int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[x]
+                        int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[self.x]
                         counter +=1
-                        x +=1
+                        self.x +=1
                     else:
-                        int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[x]
+                        int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[self.x]
                         counter +=1
-                        x +=1
-                #Absolut
-                while int_array_input_bool_threshold[counter] == True:
+                        self.x +=1
+                    if counter >= (len(int_array_input_bool_threshold)):
+                        break
+                if counter >= (len(int_array_input_bool_threshold)):
+                    break
+
+                #Hold
+                while int_array_input_bool_threshold[counter] == True and self.comp_state =="Attack":
                     if int_array_input[counter] >= 0.0:
                         int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[x_max-1]
                         counter += 1
                     else:
                         int_array_input[(counter)] = int_array_input[(counter)] * self.attack_envelope[x_max-1]
                         counter += 1
+                    if counter >= (len(int_array_input_bool_threshold)):
+                        break
+                if counter >= (len(int_array_input_bool_threshold)):
+                    break
+
                 #Release
-                while y < y_max:
+                self.comp_state = "Release"
+                while self.y < y_max and self.comp_state=="Release":
+                    self.x = 0
                     if int_array_input_bool_threshold[counter] == False:
                         if int_array_input[(counter)] >= 0.0:
-                            int_array_input[(counter)] = int_array_input[(counter)] * self.release_envelope[y]
+                            int_array_input[(counter)] = int_array_input[(counter)] * self.release_envelope[self.y]
                             counter +=1
-                            y+=1
+                            self.y+=1
                         else:
-                            int_array_input[(counter)] = int_array_input[(counter)] * self.release_envelope[y]
+                            int_array_input[(counter)] = int_array_input[(counter)] * self.release_envelope[self.y]
                             counter +=1
-                            y+=1
+                            self.y+=1
+                        if counter >= (len(int_array_input_bool_threshold)):
+                            break
+
                     else:
+                        if counter >= (len(int_array_input_bool_threshold)):
+                            break
                         full_envelope = False
-                        y=0
+                        self.y=0
                         counter_freeze = True
                         break
-                if y == y_max:
+                if counter >= (len(int_array_input_bool_threshold)):
+                    break
+                if self.y == y_max:
                     full_envelope = True
-                    x=0
-                    y=0
+                    self.comp_state = "Resting"
+                    self.x=0
+                    self.y=0
             if counter_freeze == False:
                 counter += 1
         return int_array_input

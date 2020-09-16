@@ -454,9 +454,18 @@ class EQ3Band:
 
 sine_full = CreateSinewave(44100,200,2048)
 
-music = MonoWavToNumpy16BitInt('testmusic_mono.wav')
-music = music[0:4096]
+music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
+music_unprocessed = music_raw[0:2048]
+#print (len(music_unprocessed))
+music = music_unprocessed[0:512]
+
+music2 = music_unprocessed[512:1024]
+music3 = music_unprocessed[1024:1536]
+music4 = music_unprocessed[1536:2048]
 music_copy = copy.deepcopy(music)
+music_copy2 = copy.deepcopy(music2)
+music_copy3 = copy.deepcopy(music3)
+music_copy4 = copy.deepcopy(music4)
 #music = numpy.arange(0,32767,1)
 #sine_copy = copy.deepcopy(sine_full)
 #sine_full = VolumeChange16Bit(sine_full,-1)
@@ -477,6 +486,9 @@ start = timeit.default_timer()
 #print(filteredtest)
 
 music_copy = comptest.applycompressor(music_copy)
+music_copy2 = comptest.applycompressor(music_copy2)
+music_copy3 = comptest.applycompressor(music_copy3)
+music_copy4 = comptest.applycompressor(music_copy4)
 
 stop = timeit.default_timer()
 
@@ -503,6 +515,9 @@ print('Time: ', (stop - start)*1000, 'ms')
 
 #sine_copy = sine_copy * 32767
 #sine_copy = sine_copy.astype('int16')
+music_copy = numpy.append(music_copy,music_copy2)
+music_copy = numpy.append(music_copy,music_copy3)
+music_copy = numpy.append(music_copy,music_copy4)
 music_copy = music_copy*32767
 music_copy = music_copy.astype('int16')
 Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
@@ -513,7 +528,7 @@ Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 #pyplot.plot(music_copy)
 #pyplot.plot(sine_full)
 #pyplot.plot(apply_compression*32767)
-pyplot.plot(music)
+pyplot.plot(music_unprocessed)
 pyplot.plot(music_copy)
 
 #pyplot.plot(filteredtest)
