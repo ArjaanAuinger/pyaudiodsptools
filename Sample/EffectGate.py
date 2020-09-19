@@ -2,81 +2,29 @@ import numpy
 import sys
 import math
 import array
-"""
-    def frame_count(ms=None):
-
-        if ms is not None:
-            return ms * (44100 / 1000.0)
-        else:
-            return float(len(seg) // frame_width)
-
-    thresh_rms = 32767 * db_to_float(threshold)
-
-    look_frames = int(frame_count(ms=attack))
-
-    def rms_at(frame_i):
-        return get_sample_slice(frame_i - look_frames, frame_i).rms
-
-    def db_over_threshold(rms):
-        if rms == 0: return 0.0
-        db = ratio_to_db(rms / thresh_rms)
-        return max(db, 0)
-
-    output = []
-
-    # amount to reduce the volume of the audio by (in dB)
-    attenuation = 0.0
-
-    attack_frames = frame_count(ms=attack)
-    release_frames = frame_count(ms=release)
-    for i in seg:
-        rms_now = rms_at(i)
-
-        # with a ratio of 4.0 this means the volume will exceed the threshold by
-        # 1/4 the amount (of dB) that it would otherwise
-        max_attenuation = (1 - (1.0 / ratio)) * db_over_threshold(rms_now)
-
-        attenuation_inc = max_attenuation / attack_frames
-        attenuation_dec = max_attenuation / release_frames
-
-        if rms_now > thresh_rms and attenuation <= max_attenuation:
-            attenuation += attenuation_inc
-            attenuation = min(attenuation, max_attenuation)
-        else:
-            attenuation -= attenuation_dec
-            attenuation = max(attenuation, 0)
-
-        frame = seg.get_frame(i)
-        if attenuation != 0.0:
-            frame = audioop.mul(frame,
-                                seg.sample_width,
-                                db_to_float(-attenuation))
-
-        output.append(frame)
-
-    return seg._spawn(data=b''.join(output))
-"""
 
 
-class CreateCompressor:
-    def __init__(self,threshold_in_db=-15,ratio=0.60,attack=3.1,release=30.1):
-        self.ratio = ratio
+class CreateGate:
+    def __init__(self,threshold_in_db=-5,depth=0.1,attack=3.1,release=200.1):
+        self.depth = depth
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
         self.attack_window = numpy.zeros(int((44100 / 1000) * attack),dtype="float32")
-        self.attack_envelope = numpy.linspace(1.0,self.ratio,num=len(self.attack_window),dtype="float32")
+        self.attack_envelope = numpy.linspace(1.0,1.0/self.depth,num=len(self.attack_window),dtype="float32")
 
         self.release_window = numpy.zeros(int((44100 / 1000) * release), dtype="float32")
-        self.release_envelope = numpy.linspace(self.ratio,1.0, num=len(self.release_window), dtype="float32")
+        self.release_envelope = numpy.linspace(1.0/self.depth,1.0, num=len(self.release_window), dtype="float32")
         self.counter_freeze = 0
         self.x = 0
         self.y = 0
         self.comp_state ="Resting"
+        print(self.attack_envelope)
         # x = attack envelope counter
         # y = release envelope counter
 
 
-    def applycompressor(self,int_array_input):
+    def applygate(self,int_array_input):
         int_array_input_bool_threshold = numpy.absolute(int_array_input) > self.threshold_power
+        int_array_input = int_array_input * self.depth
         release_follow = False
         attack_follow = None
         release_break = None
@@ -87,6 +35,7 @@ class CreateCompressor:
         counter = 0
         x_max=len(self.attack_envelope)
         y_max=len(self.release_envelope)
+
 
         while counter < int(len(int_array_input_bool_threshold)):
 
@@ -145,6 +94,7 @@ class CreateCompressor:
                     self.y=0
             if counter_freeze == False:
                 counter += 1
+               
         return int_array_input
 
 

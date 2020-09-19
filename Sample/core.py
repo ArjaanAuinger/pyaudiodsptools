@@ -7,6 +7,7 @@ import numpy
 import math
 from Filter import CreateLowCutFilter, CreateHighCutFilter
 from EffectCompressor import CreateCompressor
+from EffectGate import CreateGate
 
 
 
@@ -455,13 +456,15 @@ class EQ3Band:
 sine_full = CreateSinewave(44100,200,2048)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
-music_unprocessed = music_raw[0:2048]
+music_raw = music_raw.astype('float32')
+music_raw = music_raw / 32768
+music_unprocessed = music_raw[0:131072]
 #print (len(music_unprocessed))
-music = music_unprocessed[0:512]
+music = music_unprocessed[0:32768]
 
-music2 = music_unprocessed[512:1024]
-music3 = music_unprocessed[1024:1536]
-music4 = music_unprocessed[1536:2048]
+music2 = music_unprocessed[32768:65536]
+music3 = music_unprocessed[65536:98304]
+music4 = music_unprocessed[98304:131072]
 music_copy = copy.deepcopy(music)
 music_copy2 = copy.deepcopy(music2)
 music_copy3 = copy.deepcopy(music3)
@@ -480,15 +483,17 @@ music_copy4 = copy.deepcopy(music4)
 
 #filtertest = EQ3Band()
 #filteredtest = sine_full
-comptest = CreateCompressor()
+comptest = CreateGate()
+
+
 start = timeit.default_timer()
 #filteredtest = filtertest.processing(sine_full)
 #print(filteredtest)
 
-music_copy = comptest.applycompressor(music_copy)
-music_copy2 = comptest.applycompressor(music_copy2)
-music_copy3 = comptest.applycompressor(music_copy3)
-music_copy4 = comptest.applycompressor(music_copy4)
+music_copy = comptest.applygate(music_copy)
+music_copy2 = comptest.applygate(music_copy2)
+music_copy3 = comptest.applygate(music_copy3)
+music_copy4 = comptest.applygate(music_copy4)
 
 stop = timeit.default_timer()
 
@@ -518,9 +523,7 @@ print('Time: ', (stop - start)*1000, 'ms')
 music_copy = numpy.append(music_copy,music_copy2)
 music_copy = numpy.append(music_copy,music_copy3)
 music_copy = numpy.append(music_copy,music_copy4)
-music_copy = music_copy*32767
-music_copy = music_copy.astype('int16')
-Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+
 #pyplot.plot(XaxisForMatplotlib(sine),sine)
 #pyplot.plot(XaxisForMatplotlib(y3),y3)
 #pyplot.plot(XaxisForMatplotlib(sine), sine)
@@ -530,6 +533,10 @@ Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 #pyplot.plot(apply_compression*32767)
 pyplot.plot(music_unprocessed)
 pyplot.plot(music_copy)
+
+music_copy = music_copy*32767
+music_copy = music_copy.astype('int16')
+Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 
 #pyplot.plot(filteredtest)
 pyplot.show()
