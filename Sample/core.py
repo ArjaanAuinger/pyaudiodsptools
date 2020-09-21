@@ -8,6 +8,7 @@ import math
 from Filter import CreateLowCutFilter, CreateHighCutFilter
 from EffectCompressor import CreateCompressor
 from EffectGate import CreateGate
+from EffectDelay import CreateDelay
 
 
 
@@ -30,12 +31,7 @@ import struct
 
 def CreateSinewave(sin_sample_rate, sin_frequency, sin_buffer_size):
     sin_time_array = numpy.arange(sin_buffer_size)
-    sin_amplitude_array = numpy.int16(32767*numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
-    return (sin_amplitude_array)
-
-def CreateSinewave32Bit(sin_sample_rate, sin_frequency, sin_buffer_size):
-    sin_time_array = numpy.arange(sin_buffer_size)
-    sin_amplitude_array = numpy.int32(2147483647*numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
+    sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
     return (sin_amplitude_array)
 
 def CreateSquarewave(square_sample_rate, square_frequency, square_buffer_size):
@@ -241,7 +237,18 @@ else:
         fid.write(data.tostring())
 
 
+def MakeChunks(float32_array_input,chunk_size=1024):
+    number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
+    samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
+    float32_array_input = numpy.append(float32_array_input,numpy.zeros(samples_to_append,dtype="float32"))
+    float32_chunked_array = numpy.split(float32_array_input, number_of_chunks)
+    return float32_chunked_array
 
+def CombineChunks(numpy_array_input):
+    float32_array_output = []
+    for chunk in numpy_array_input:
+        float32_array_output = numpy.append(float32_array_output,chunk)
+    return float32_array_output
 
 def InvertSignal(int_array_input):
     int_array_output = numpy.invert(int_array_input)
@@ -293,7 +300,7 @@ class EffectLimiter:
         return signal
 
 
-class EffectTremolo:
+class CreateTremolo:
     def __init__(self,tremolo_depth,lfo_in_hertz=4.5):
         self.sin_sample_rate = 44100
         self.sin_time_array = numpy.arange(numpy.float32(self.sin_sample_rate/lfo_in_hertz))
@@ -302,7 +309,7 @@ class EffectTremolo:
         self.lfo_length = len(self.sin_lfo)
         self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)
 
-    def tremolo(self,int_array_input):
+    def applytremolo(self,int_array_input):
         current_input_lenght = len(int_array_input)
         while len(self.sin_lfo_copy) < len(int_array_input):
             self.sin_lfo_copy = numpy.append(self.sin_lfo_copy,self.sin_lfo)
@@ -312,7 +319,7 @@ class EffectTremolo:
         int_array_output = int_array_input.astype('int16')
         return int_array_output
 
-    def lfo_reset(self):
+    def tremoloreset(self):
         self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)
 
 
@@ -334,9 +341,9 @@ def EffectHardDistortion(int_array_input):
 
 class EQ3Band:
     def __init__(self):
-        self.LowdBgain = 0.1
-        self.MiddBgain = 0.1
-        self.HighdBgain = 0.1
+        self.LowdBgain = 1.1
+        self.MiddBgain = -6.1
+        self.HighdBgain = 6.1
         self.Fs = 44100.0
         self.Pi = numpy.pi
 
@@ -387,19 +394,19 @@ class EQ3Band:
         self.HIGHa1 = 2*((self.HighA-1) - (self.HighA+1)*numpy.cos(self.HighShelfw0))
         self.HIGHa2 = (self.HighA+1) - (self.HighA-1)*numpy.cos(self.HighShelfw0) - 2*numpy.sqrt(self.HighA)*self.HighShelfalpha
 
-    def processing (self,int_array_input):
+    def applyeq3band (self,int_array_input):
         ILow = 0
         IMid = 0
         IHigh = 0
         #int_array_input=int_array_input.astype('float32')
         #int_array_input = int_array_input/32767
         #int_array_input_copy = copy.deepcopy(int_array_input)
-        int_array_input = int_array_input.astype('float32')
+        #int_array_input = int_array_input.astype('float32')
 
         #int_array_input[0]=0.0
         #int_array_input[1]=0.0
         #int_array_input[2]=0.0
-        print(int_array_input)
+        #print(int_array_input)
 
         while (ILow <= len(int_array_input)):
             #print (len(int_array_input))
@@ -453,22 +460,15 @@ class EQ3Band:
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-sine_full = CreateSinewave(44100,200,2048)
+sine_full = CreateSinewave(44100,200,256)
+sine_copy = copy.deepcopy(sine_full)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
-music_unprocessed = music_raw[0:131072]
-#print (len(music_unprocessed))
-music = music_unprocessed[0:32768]
-
-music2 = music_unprocessed[32768:65536]
-music3 = music_unprocessed[65536:98304]
-music4 = music_unprocessed[98304:131072]
-music_copy = copy.deepcopy(music)
-music_copy2 = copy.deepcopy(music2)
-music_copy3 = copy.deepcopy(music3)
-music_copy4 = copy.deepcopy(music4)
+#music_raw = music_raw[0:44100]
+music_raw_copy = copy.deepcopy(music_raw)
+music_chunked = MakeChunks(music_raw_copy)
 #music = numpy.arange(0,32767,1)
 #sine_copy = copy.deepcopy(sine_full)
 #sine_full = VolumeChange16Bit(sine_full,-1)
@@ -481,19 +481,29 @@ music_copy4 = copy.deepcopy(music4)
 #filter1 = CreateLowCutFilter(1000.0)
 #w,h = peaking_filter()
 
-#filtertest = EQ3Band()
+filtertest = EQ3Band()
+tremolotest = CreateTremolo(0.6)
 #filteredtest = sine_full
-comptest = CreateGate()
+delaytest = CreateDelay()
+comptest = CreateCompressor()
 
 
 start = timeit.default_timer()
 #filteredtest = filtertest.processing(sine_full)
 #print(filteredtest)
+counter = 0
+for array in music_chunked:
 
-music_copy = comptest.applygate(music_copy)
-music_copy2 = comptest.applygate(music_copy2)
-music_copy3 = comptest.applygate(music_copy3)
-music_copy4 = comptest.applygate(music_copy4)
+    #print (array)
+    array = filtertest.applyeq3band(array)
+    print(counter)
+    counter += 1
+#music_copy = comptest.applygate(music_copy)
+#music_copy2 = comptest.applygate(music_copy2)
+#music_copy3 = comptest.applygate(music_copy3)
+#music_copy4 = comptest.applygate(music_copy4)
+
+music_copy = CombineChunks(music_chunked)
 
 stop = timeit.default_timer()
 
@@ -520,19 +530,17 @@ print('Time: ', (stop - start)*1000, 'ms')
 
 #sine_copy = sine_copy * 32767
 #sine_copy = sine_copy.astype('int16')
-music_copy = numpy.append(music_copy,music_copy2)
-music_copy = numpy.append(music_copy,music_copy3)
-music_copy = numpy.append(music_copy,music_copy4)
 
 #pyplot.plot(XaxisForMatplotlib(sine),sine)
 #pyplot.plot(XaxisForMatplotlib(y3),y3)
 #pyplot.plot(XaxisForMatplotlib(sine), sine)
 #pyplot.plot(sine_summed)
 #pyplot.plot(music_copy)
-#pyplot.plot(sine_full)
-#pyplot.plot(apply_compression*32767)
-pyplot.plot(music_unprocessed)
+pyplot.plot(music_raw)
 pyplot.plot(music_copy)
+#pyplot.plot(apply_compression*32767)
+#pyplot.plot(music_unprocessed)
+#pyplot.plot(music_copy)
 
 music_copy = music_copy*32767
 music_copy = music_copy.astype('int16')
