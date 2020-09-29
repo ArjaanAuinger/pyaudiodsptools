@@ -5,10 +5,12 @@ import time
 import timeit
 import numpy
 import math
-from Filter import CreateLowCutFilter, CreateHighCutFilter
+from EffectFilter import CreateLowCutFilter, CreateHighCutFilter
 from EffectCompressor import CreateCompressor
 from EffectGate import CreateGate
 from EffectDelay import CreateDelay
+from EffectReverb import CreateReverb
+import EffectSimpleFilter
 
 
 
@@ -56,7 +58,7 @@ def CreateWhitenoise(sample_rate,buffer_size):
         f[-1:-1 - Np:-1] = numpy.conj(f[1:Np + 1])
         return (numpy.fft.ifft(f).real*5)
 
-    whitenoise_amplitude_array = numpy.int16(32767*fftnoise(f))
+    whitenoise_amplitude_array = numpy.float32(fftnoise(f))
 
     return whitenoise_time_array,whitenoise_amplitude_array
 
@@ -91,7 +93,7 @@ def Dither16BitTo8Bit(int_array_input):
     # int_array_output = (int_array_dithered*256).astype('int16')
     return int_array_dithered
 
-def Dither32BitTo16Bit(int_array_input):
+def Dither32BitIntTo16BitInt(int_array_input):
     rectangular_dither_array = numpy.random.randint(-1, 1, size=int_array_input.size)
     int_array_dithered = numpy.around(int_array_input / 65535, decimals=0).astype('int32')
 
@@ -143,12 +145,10 @@ def XaxisForMatplotlib(any_array_input):
     return any_array_output
 
 
-def VolumeChange16Bit(int_array_input, gain_change_in_db):
-    float_array_input = numpy.float32(int_array_input/32767)
-    float_array_input = (10 ** (gain_change_in_db/20))*float_array_input
-    float_array_input = numpy.clip(float_array_input, -1.0, 1.0)
-    int_array_output = numpy.int16(float_array_input*32767)
-    return int_array_output
+def VolumeChange(float32_array_input, gain_change_in_db):
+    float32_array_input = (10 ** (gain_change_in_db/20))*float32_array_input
+    float32_array_input = numpy.clip(float32_array_input, -1.73, 1.73)
+    return float32_array_input
 
 
 def MonoWavToNumpy16BitInt(wav_file_path):
@@ -239,13 +239,15 @@ else:
 
 def MakeChunks(float32_array_input,chunk_size=1024):
     number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
-    samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
-    float32_array_input = numpy.append(float32_array_input,numpy.zeros(samples_to_append,dtype="float32"))
+    if len(float32_array_input) % number_of_chunks != 0:
+        samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
+        print(number_of_chunks)
+        float32_array_input = numpy.append(float32_array_input,numpy.zeros(samples_to_append,dtype="float32"))
     float32_chunked_array = numpy.split(float32_array_input, number_of_chunks)
     return float32_chunked_array
 
 def CombineChunks(numpy_array_input):
-    float32_array_output = []
+    float32_array_output = numpy.array([],dtype="float32")
     for chunk in numpy_array_input:
         float32_array_output = numpy.append(float32_array_output,chunk)
     return float32_array_output
@@ -466,42 +468,27 @@ sine_copy = copy.deepcopy(sine_full)
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
-#music_raw = music_raw[0:44100]
+music_raw = music_raw[1024:4096]
+#music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
 music_raw_copy = copy.deepcopy(music_raw)
-music_chunked = MakeChunks(music_raw_copy)
-#music = numpy.arange(0,32767,1)
-#sine_copy = copy.deepcopy(sine_full)
-#sine_full = VolumeChange16Bit(sine_full,-1)
-#sine,sine2,sine3,sine4 = numpy.split(sine_full,4)
-#sos = EffectFilter.iirfilter(2, 400, rs=60, btype='high', analog = False, ftype = 'butter', fs = 44100, output = 'sos')
-#w, h = EffectFilter.sosfreqz(sos, 44100, fs=44100)"""
-#fir_coeff = Filter.firwin(29, 400.0/22050.0, pass_zero='highpass')
+music_chunked = MakeChunks(music_raw_copy,chunk_size=1024)
 
-#filtered = Filter.lfilter(fir_coeff, 1.0, sine_full)
-#filter1 = CreateLowCutFilter(1000.0)
-#w,h = peaking_filter()
 
-filtertest = EQ3Band()
+#filtertest = EQ3Band()
 tremolotest = CreateTremolo(0.6)
-#filteredtest = sine_full
+highcuttest = CreateHighCutFilter(200.0)
 delaytest = CreateDelay()
 comptest = CreateCompressor()
-
+reverbtest = CreateReverb()
+simplehighcuttest = EffectSimpleFilter.CreateLowCutFilter()
 
 start = timeit.default_timer()
-#filteredtest = filtertest.processing(sine_full)
-#print(filteredtest)
-counter = 0
-for array in music_chunked:
 
-    #print (array)
-    array = filtertest.applyeq3band(array)
+counter = 0
+for counter in range(len(music_chunked)):
+    music_chunked[counter] = simplehighcuttest.applyfilter(music_chunked[counter])
     print(counter)
     counter += 1
-#music_copy = comptest.applygate(music_copy)
-#music_copy2 = comptest.applygate(music_copy2)
-#music_copy3 = comptest.applygate(music_copy3)
-#music_copy4 = comptest.applygate(music_copy4)
 
 music_copy = CombineChunks(music_chunked)
 
@@ -509,46 +496,16 @@ stop = timeit.default_timer()
 
 print('Time: ', (stop - start)*1000, 'ms')
 
-#fig = pyplot.figure()
-#ax = fig.add_subplot(1, 1, 1)
-#ax.semilogx(w, 20 * numpy.log10(numpy.maximum(abs(h), 1e-5)))
-#ax.set_title('Butterworth highpass frequency response')
-#ax.set_xlabel('Frequency [Hz]')
-#ax.set_ylabel('Amplitude [dB]')
-#ax.axis((10, 20000, -100, 10))
-#ax.grid(which='both', axis='both')
-
-#wave = sine_full
-#wave,freq=EQ(sine_full)
-#limiter.limit(sine2)
-#limiter.limit(sine3)
-#limiter.limit(sine4)
-#sine_add = numpy.append(sine,sine2)
-#sine_add = numpy.append(sine_add,sine3)
-#sine_add = numpy.append(sine_add,sine4)
-#filtered_signal = filtered_signal.astype('int16')
-
-#sine_copy = sine_copy * 32767
-#sine_copy = sine_copy.astype('int16')
-
-#pyplot.plot(XaxisForMatplotlib(sine),sine)
-#pyplot.plot(XaxisForMatplotlib(y3),y3)
-#pyplot.plot(XaxisForMatplotlib(sine), sine)
-#pyplot.plot(sine_summed)
-#pyplot.plot(music_copy)
 pyplot.plot(music_raw)
 pyplot.plot(music_copy)
-#pyplot.plot(apply_compression*32767)
-#pyplot.plot(music_unprocessed)
-#pyplot.plot(music_copy)
+
 
 music_copy = music_copy*32767
 music_copy = music_copy.astype('int16')
 Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 
-#pyplot.plot(filteredtest)
+
 pyplot.show()
-#pyplot.plot(XaxisForMatplotlib(y6),y6)
 
 
 
