@@ -462,16 +462,17 @@ class EQ3Band:
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-sine_full = CreateSinewave(44100,200,256)
+sine_full = CreateSinewave(44100,50,4096)
 sine_copy = copy.deepcopy(sine_full)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
-music_raw = music_raw[1024:4096]
+music_raw = music_raw[0:4096]
 #music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
 music_raw_copy = copy.deepcopy(music_raw)
-music_chunked = MakeChunks(music_raw_copy,chunk_size=1024)
+music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
+sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
 #filtertest = EQ3Band()
@@ -491,6 +492,7 @@ for counter in range(len(music_chunked)):
     counter += 1
 
 music_copy = CombineChunks(music_chunked)
+sine_copy = CombineChunks(sine_chunked)
 
 stop = timeit.default_timer()
 
@@ -498,11 +500,13 @@ print('Time: ', (stop - start)*1000, 'ms')
 
 pyplot.plot(music_raw)
 pyplot.plot(music_copy)
+#pyplot.plot(sine_full)
+#pyplot.plot(sine_copy)
 
 
 music_copy = music_copy*32767
-music_copy = music_copy.astype('int16')
-Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+#music_copy = music_copy.astype('int16')
+#Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
 
 
 pyplot.show()
