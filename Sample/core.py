@@ -147,7 +147,7 @@ def XaxisForMatplotlib(any_array_input):
 
 def VolumeChange(float32_array_input, gain_change_in_db):
     float32_array_input = (10 ** (gain_change_in_db/20))*float32_array_input
-    float32_array_input = numpy.clip(float32_array_input, -1.73, 1.73)
+    float32_array_input = numpy.clip(float32_array_input, -1.0, 1.0)
     return float32_array_input
 
 
@@ -237,7 +237,7 @@ else:
         fid.write(data.tostring())
 
 
-def MakeChunks(float32_array_input,chunk_size=1024):
+def MakeChunks(float32_array_input,chunk_size):
     number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
     if len(float32_array_input) % number_of_chunks != 0:
         samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
@@ -318,7 +318,6 @@ class CreateTremolo:
         self.sin_lfo_chunk = self.sin_lfo_copy[:current_input_lenght]
         self.sin_lfo_copy = self.sin_lfo_copy[-(len(self.sin_lfo_copy)-current_input_lenght):]
         numpy.multiply(int_array_input,self.sin_lfo_chunk, out=int_array_input, dtype='float32', casting='unsafe')
-        int_array_output = int_array_input.astype('int16')
         return int_array_output
 
     def tremoloreset(self):
@@ -343,13 +342,14 @@ def EffectHardDistortion(int_array_input):
 
 class EQ3Band:
     def __init__(self):
-        self.LowdBgain = 1.1
+        self.LowdBgain = 6.1
         self.MiddBgain = -6.1
         self.HighdBgain = 6.1
         self.Fs = 44100.0
         self.Pi = numpy.pi
 
-        self.PrevSample = numpy.array([0.0, 0.0, 0.0])
+        self.PrevSample = numpy.array([1.0,1.0,1.0])
+        self.PrevChunkSample = numpy.array([1.0,1.0])
 
         #Low Band Options and Coefficients
         self.LowShelfFreq = 50.0
@@ -417,7 +417,9 @@ class EQ3Band:
             self.PrevSample[0] = int_array_input[ILow]
             #PrevSample = (int_array_input[I-2],int_array_input[I-1],int_array_input[I])
             if ILow > 1:
-                int_array_input[ILow] = (self.LOWb0/self.LOWa0 * self.PrevSample[0]) + (self.LOWb1 / self.LOWa0 * self.PrevSample[1]) + (self.LOWb2 / self.LOWa0 * self.PrevSample[2]) - (self.LOWa1 / self.LOWa0 * int_array_input[ILow-1]) - (self.LOWa2 / self.LOWa0 * int_array_input[ILow-2])
+                int_array_input[ILow] = (self.LOWb0 / self.LOWa0 * self.PrevSample[0]) + (self.LOWb1 / self.LOWa0 * self.PrevSample[1]) + (self.LOWb2 / self.LOWa0 * self.PrevSample[2]) - (self.LOWa1 / self.LOWa0 * int_array_input[ILow - 1]) - (self.LOWa2 / self.LOWa0 * int_array_input[ILow - 2])
+            #else:
+                #int_array_input[ILow] = (self.LOWb0 / self.LOWa0 * self.PrevSample[0]) + (self.LOWb1 / self.LOWa0 * self.PrevSample[1]) + (self.LOWb2 / self.LOWa0 * self.PrevSample[2]) - (self.LOWa1 / self.LOWa0 * self.PrevChunkSample[0]) - (self.LOWa2 / self.LOWa0 * self.PrevChunkSample[1])
             ILow = ILow + 1 #increment the counter I by adding
             if (ILow == len(int_array_input)):
                 break
@@ -444,6 +446,8 @@ class EQ3Band:
                 int_array_input[IHigh] = (self.HIGHb0/self.HIGHa0 * self.PrevSample[0]) + (self.HIGHb1 / self.HIGHa0 * self.PrevSample[1]) + (self.HIGHb2 / self.HIGHa0 * self.PrevSample[2]) - (self.HIGHa1 / self.HIGHa0 * int_array_input[IHigh - 1]) - (self.HIGHa2 / self.HIGHa0 * int_array_input[IHigh - 2])
             IHigh = IHigh + 1 #increment the counter I by adding
             if (IHigh == len(int_array_input)):
+                self.PrevChunkSample[0] = int_array_input[IHigh-1]
+                self.PrevChunkSample[1] = int_array_input[IHigh-2]
                 break
                 
 
@@ -462,54 +466,58 @@ class EQ3Band:
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-sine_full = CreateSinewave(44100,50,4096)
-sine_copy = copy.deepcopy(sine_full)
+#sine_full = CreateSinewave(44100,50,4096)
+#sine_copy = copy.deepcopy(sine_full)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
-music_raw = music_raw[0:4096]
+music_raw = VolumeChange(music_raw,-6.0)
+#music_raw = music_raw[0:4096]
 #music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
 music_raw_copy = copy.deepcopy(music_raw)
 music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
-sine_chunked = MakeChunks(sine_copy,chunk_size=512)
+#sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
-#filtertest = EQ3Band()
-tremolotest = CreateTremolo(0.6)
-highcuttest = CreateHighCutFilter(200.0)
-delaytest = CreateDelay()
-comptest = CreateCompressor()
-reverbtest = CreateReverb()
-simplehighcuttest = EffectSimpleFilter.CreateLowCutFilter()
-
+eq3test = EQ3Band()
+#tremolotest = CreateTremolo(0.6)
+#delaytest = CreateDelay()
+#comptest = CreateCompressor()
+#reverbtest = CreateReverb()
+simplehighcuttest = EffectSimpleFilter.CreateHighCutFilter(2000,512)
+simplelowcuttest = EffectSimpleFilter.CreateLowCutFilter(150,512)
 start = timeit.default_timer()
 
 counter = 0
 for counter in range(len(music_chunked)):
-    music_chunked[counter] = simplehighcuttest.applyfilter(music_chunked[counter])
-    print(counter)
-    counter += 1
+    music_chunked[counter] = eq3test.applyeq3band(music_chunked[counter])
 
-music_copy = CombineChunks(music_chunked)
-sine_copy = CombineChunks(sine_chunked)
+    #print(music_chunked)
+    counter += 1
 
 stop = timeit.default_timer()
 
 print('Time: ', (stop - start)*1000, 'ms')
 
+music_copy = CombineChunks(music_chunked)
+#sine_copy = CombineChunks(sine_chunked)
+
+
+
 pyplot.plot(music_raw)
 pyplot.plot(music_copy)
 #pyplot.plot(sine_full)
 #pyplot.plot(sine_copy)
-
+pyplot.show()
 
 music_copy = music_copy*32767
-#music_copy = music_copy.astype('int16')
-#Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+music_copy = music_copy.astype('int16')
+Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+print('wav created')
 
 
-pyplot.show()
+
 
 
 
