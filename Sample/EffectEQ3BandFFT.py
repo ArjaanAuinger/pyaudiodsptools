@@ -74,6 +74,7 @@ class CreateLowCutFilter:
         self.sinc_filter[(self.filter_length - 1) // 2] += 1
 
         self.filtered_signal = numpy.zeros(chunk_size * 3)
+        self.original_signal = numpy.zeros(chunk_size * 3)
         self.float32_array_input_1 = numpy.zeros(chunk_size)
         self.float32_array_input_2 = numpy.zeros(chunk_size)
         self.float32_array_input_3 = numpy.zeros(chunk_size)
@@ -89,11 +90,19 @@ class CreateLowCutFilter:
         self.float32_array_input_1 = float32_array_input
 
         self.filtered_signal = numpy.concatenate(
-            (self.float32_array_input_3, self.float32_array_input_2, self.float32_array_input_1), axis=None)
+            (self.float32_array_input_3,self.float32_array_input_2,self.float32_array_input_1),axis=None)
 
         self.filtered_signal = numpy.fft.fft(self.filtered_signal)
-        self.filtered_signal = (self.filtered_signal * self.sinc_filter)
+        pyplot.plot(self.filtered_signal)
+        pyplot.plot(self.sinc_filter)
+        self.filtered_signal = self.filtered_signal * self.sinc_filter
+        pyplot.plot(self.filtered_signal)
+        pyplot.show()
         self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
         self.filtered_signal = self.filtered_signal[512:-512]
 
         return self.filtered_signal
+
+        #self.filtered_signal = (self.original_signal*self.sinc_filter)
+        #self.filtered_signal = self.original_signal + (self.filtered_signal - self.original_signal)
+

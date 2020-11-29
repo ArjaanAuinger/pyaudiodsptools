@@ -11,6 +11,8 @@ from EffectGate import CreateGate
 from EffectDelay import CreateDelay
 from EffectReverb import CreateReverb
 import EffectSimpleFilter
+import EffectEQ3BandFFT
+import EffectEQ3Band
 
 
 
@@ -340,168 +342,50 @@ def EffectHardDistortion(int_array_input):
 
 
 
-class EQ3Band:
-    def __init__(self):
-        self.LowdBgain = 6.1
-        self.MiddBgain = -6.1
-        self.HighdBgain = 6.1
-        self.Fs = 44100.0
-        self.Pi = numpy.pi
-
-        self.PrevSample = numpy.array([1.0,1.0,1.0])
-        self.PrevChunkSample = numpy.array([1.0,1.0])
-
-        #Low Band Options and Coefficients
-        self.LowShelfFreq = 50.0
-        self.LowShelfQ = 1.0;
-        self.LowA = numpy.sqrt(10**(self.LowdBgain/20))
-        self.LowShelfw0 = 2 * numpy.pi * self.LowShelfFreq / self.Fs
-        self.LowShelfalpha = numpy.sin(self.LowShelfw0)/2 * numpy.sqrt((self.LowA + 1/self.LowA)*(1/self.LowShelfQ-1)+2)
-
-        #Mid Band Options and Coefficients
-        self.MidFreq = 200.0
-        self.MidQ = 2.5;
-        self.MidA = numpy.sqrt(10**(self.MiddBgain/20))
-        self.Midw0 = 2 * numpy.pi * self.MidFreq / self.Fs
-        self.Midalpha = numpy.sin(self.Midw0) / (2 * self.MidQ)
-
-        #High Shelf Options ans Coefficients
-        self.HighShelfFreq = 8000.0
-        self.HighShelfQ = 1.0;
-        self.HighA = numpy.sqrt(10**(self.HighdBgain/20))
-        self.HighShelfw0 = 2 * numpy.pi * self.HighShelfFreq / self.Fs
-        self.HighShelfalpha = numpy.sin(self.HighShelfw0)/2 * numpy.sqrt((self.HighA + 1/self.HighA)*(1/self.HighShelfQ-1)+2)
-
-        #Low Shelf Coefficients calculation
-        self.LOWb0 = self.LowA*((self.LowA+1) - (self.LowA-1)*numpy.cos(self.LowShelfw0) + 2*numpy.sqrt(self.LowA)*self.LowShelfalpha)
-        self.LOWb1 = 2*self.LowA*((self.LowA-1) - (self.LowA+1)*numpy.cos(self.LowShelfw0))
-        self.LOWb2 = self.LowA*((self.LowA+1) - (self.LowA-1)*numpy.cos(self.LowShelfw0) - 2*numpy.sqrt(self.LowA)*self.LowShelfalpha)
-        self.LOWa0 = (self.LowA+1) + (self.LowA-1)*numpy.cos(self.LowShelfw0) + 2*numpy.sqrt(self.LowA)*self.LowShelfalpha
-        self.LOWa1 = -2*((self.LowA-1) + (self.LowA+1)*numpy.cos(self.LowShelfw0))
-        self.LOWa2 = (self.LowA+1) + (self.LowA-1)*numpy.cos(self.LowShelfw0) - 2*numpy.sqrt(self.LowA)*self.LowShelfalpha
-
-        #Mid Coefficients calculation
-        self.MIDb0 = 1 + self.Midalpha * self.MidA
-        self.MIDb1 = -2 * numpy.cos(self.Midw0)
-        self.MIDb2 = 1 - self.Midalpha * self.MidA
-        self.MIDa0 = 1 + self.Midalpha / self.MidA
-        self.MIDa1 = -2 * numpy.cos(self.Midw0)
-        self.MIDa2 = 1 - self.Midalpha / self.MidA
-
-        #High Shelf Coefficients calculation
-        self.HIGHb0 = self.HighA*((self.HighA+1) + (self.HighA-1)*numpy.cos(self.HighShelfw0) + 2*numpy.sqrt(self.HighA)*self.HighShelfalpha)
-        self.HIGHb1 = -2*self.HighA*((self.HighA-1) + (self.HighA+1)*numpy.cos(self.HighShelfw0))
-        self.HIGHb2 = self.HighA*((self.HighA+1) + (self.HighA-1)*numpy.cos(self.HighShelfw0) - 2*numpy.sqrt(self.HighA)*self.HighShelfalpha)
-        self.HIGHa0 = (self.HighA+1) - (self.HighA-1)*numpy.cos(self.HighShelfw0) + 2*numpy.sqrt(self.HighA)*self.HighShelfalpha
-        self.HIGHa1 = 2*((self.HighA-1) - (self.HighA+1)*numpy.cos(self.HighShelfw0))
-        self.HIGHa2 = (self.HighA+1) - (self.HighA-1)*numpy.cos(self.HighShelfw0) - 2*numpy.sqrt(self.HighA)*self.HighShelfalpha
-
-    def applyeq3band (self,int_array_input):
-        ILow = 0
-        IMid = 0
-        IHigh = 0
-        #int_array_input=int_array_input.astype('float32')
-        #int_array_input = int_array_input/32767
-        #int_array_input_copy = copy.deepcopy(int_array_input)
-        #int_array_input = int_array_input.astype('float32')
-
-        #int_array_input[0]=0.0
-        #int_array_input[1]=0.0
-        #int_array_input[2]=0.0
-        #print(int_array_input)
-
-        while (ILow <= len(int_array_input)):
-            #print (len(int_array_input))
-            self.PrevSample[2] = self.PrevSample[1]
-            self.PrevSample[1] = self.PrevSample[0]
-            self.PrevSample[0] = int_array_input[ILow]
-            #PrevSample = (int_array_input[I-2],int_array_input[I-1],int_array_input[I])
-            if ILow > 1:
-                int_array_input[ILow] = (self.LOWb0 / self.LOWa0 * self.PrevSample[0]) + (self.LOWb1 / self.LOWa0 * self.PrevSample[1]) + (self.LOWb2 / self.LOWa0 * self.PrevSample[2]) - (self.LOWa1 / self.LOWa0 * int_array_input[ILow - 1]) - (self.LOWa2 / self.LOWa0 * int_array_input[ILow - 2])
-            #else:
-                #int_array_input[ILow] = (self.LOWb0 / self.LOWa0 * self.PrevSample[0]) + (self.LOWb1 / self.LOWa0 * self.PrevSample[1]) + (self.LOWb2 / self.LOWa0 * self.PrevSample[2]) - (self.LOWa1 / self.LOWa0 * self.PrevChunkSample[0]) - (self.LOWa2 / self.LOWa0 * self.PrevChunkSample[1])
-            ILow = ILow + 1 #increment the counter I by adding
-            if (ILow == len(int_array_input)):
-                break
-
-        while (IMid <= len(int_array_input)):
-            #print (len(int_array_input))
-            self.PrevSample[2] = self.PrevSample[1]
-            self.PrevSample[1] = self.PrevSample[0]
-            self.PrevSample[0] = int_array_input[IMid]
-            #PrevSample = (int_array_input[I-2],int_array_input[I-1],int_array_input[I])
-            if IMid > 1:
-                int_array_input[IMid] = (self.MIDb0/self.MIDa0 * self.PrevSample[0]) + (self.MIDb1 / self.MIDa0 * self.PrevSample[1]) + (self.MIDb2 / self.MIDa0 * self.PrevSample[2]) - (self.MIDa1 / self.MIDa0 * int_array_input[IMid - 1]) - (self.MIDa2 / self.MIDa0 * int_array_input[IMid - 2])
-            IMid = IMid + 1 #increment the counter I by adding
-            if (IMid == len(int_array_input)):
-                break
-
-        while (IHigh <= len(int_array_input)):
-            #print (len(int_array_input))
-            self.PrevSample[2] = self.PrevSample[1]
-            self.PrevSample[1] = self.PrevSample[0]
-            self.PrevSample[0] = int_array_input[IHigh]
-            #PrevSample = (int_array_input[I-2],int_array_input[I-1],int_array_input[I])
-            if IHigh > 1:
-                int_array_input[IHigh] = (self.HIGHb0/self.HIGHa0 * self.PrevSample[0]) + (self.HIGHb1 / self.HIGHa0 * self.PrevSample[1]) + (self.HIGHb2 / self.HIGHa0 * self.PrevSample[2]) - (self.HIGHa1 / self.HIGHa0 * int_array_input[IHigh - 1]) - (self.HIGHa2 / self.HIGHa0 * int_array_input[IHigh - 2])
-            IHigh = IHigh + 1 #increment the counter I by adding
-            if (IHigh == len(int_array_input)):
-                self.PrevChunkSample[0] = int_array_input[IHigh-1]
-                self.PrevChunkSample[1] = int_array_input[IHigh-2]
-                break
-                
-
-        #int_array_input = int_array_input *32767
-        #int_array_input = int_array_input.astype('int16')
-        #int_array_input = int_array_input.astype('int16')
-        return int_array_input
-
-
-
-
-
-
-
-
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-#sine_full = CreateSinewave(44100,50,4096)
+sine_full = CreateSinewave(44100,100,4096)
 #sine_copy = copy.deepcopy(sine_full)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
 music_raw = VolumeChange(music_raw,-6.0)
-#music_raw = music_raw[0:4096]
+music_raw = music_raw[0:88200]
 #music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
 music_raw_copy = copy.deepcopy(music_raw)
+sine_copy = copy.deepcopy(sine_full)
 music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
-#sine_chunked = MakeChunks(sine_copy,chunk_size=512)
+
+sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
-eq3test = EQ3Band()
+eq3test = EffectEQ3Band.EQ3Band()
 #tremolotest = CreateTremolo(0.6)
 #delaytest = CreateDelay()
 #comptest = CreateCompressor()
 #reverbtest = CreateReverb()
 simplehighcuttest = EffectSimpleFilter.CreateHighCutFilter(2000,512)
-simplelowcuttest = EffectSimpleFilter.CreateLowCutFilter(150,512)
+simplelowcuttest = EffectEQ3BandFFT.CreateLowCutFilter(4000,512)
 start = timeit.default_timer()
 
 counter = 0
 for counter in range(len(music_chunked)):
-    music_chunked[counter] = eq3test.applyeq3band(music_chunked[counter])
+    #pyplot.plot(music_chunked[counter])
+    music_chunked[counter] = simplelowcuttest.applyfilter(music_chunked[counter])
 
     #print(music_chunked)
     counter += 1
+    #pyplot.plot(sine_chunked[counter])
+    #pyplot.show()
 
 stop = timeit.default_timer()
 
 print('Time: ', (stop - start)*1000, 'ms')
 
 music_copy = CombineChunks(music_chunked)
-#sine_copy = CombineChunks(sine_chunked)
+sine_copy = CombineChunks(sine_chunked)
 
 
 
