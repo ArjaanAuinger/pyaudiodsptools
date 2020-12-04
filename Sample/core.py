@@ -345,7 +345,7 @@ def EffectHardDistortion(int_array_input):
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)
 
-sine_full = CreateSinewave(44100,100,4096)
+sine_full = CreateSinewave(44100,1000,4096)
 #sine_copy = copy.deepcopy(sine_full)
 
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
@@ -367,7 +367,7 @@ eq3test = EffectEQ3Band.EQ3Band()
 #comptest = CreateCompressor()
 #reverbtest = CreateReverb()
 simplehighcuttest = EffectSimpleFilter.CreateHighCutFilter(2000,512)
-simplelowcuttest = EffectEQ3BandFFT.CreateLowCutFilter(4000,512)
+simplelowcuttest = EffectEQ3BandFFT.CreateLowCutFilter(10000,512)
 start = timeit.default_timer()
 
 counter = 0

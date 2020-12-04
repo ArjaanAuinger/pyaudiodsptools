@@ -57,14 +57,13 @@ class CreateLowCutFilter:
     def __init__(self,cutoff_frequency,chunk_size):
         self.fS = 44100  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
-        self.filter_length = chunk_size + 1  # Filter length, must be odd.
-
+        self.filter_length =  25#chunk_size + 1  # Filter length, must be odd.
         # Compute sinc filter.
         self.sinc_filter = numpy.sinc(
             2 * self.fH / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
-        self.sinc_filter *= numpy.blackman(self.filter_length)
+        self.sinc_filter *= numpy.kaiser(self.filter_length,2.0)
 
         # Normalize to get unity gain.
         self.sinc_filter /= numpy.sum(self.sinc_filter)
@@ -80,6 +79,7 @@ class CreateLowCutFilter:
         self.float32_array_input_3 = numpy.zeros(chunk_size)
 
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
+        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(chunk_size - self.filter_length + 1))
         self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(((len(self.sinc_filter) * 2) - 3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
@@ -93,11 +93,17 @@ class CreateLowCutFilter:
             (self.float32_array_input_3,self.float32_array_input_2,self.float32_array_input_1),axis=None)
 
         self.filtered_signal = numpy.fft.fft(self.filtered_signal)
-        pyplot.plot(self.filtered_signal)
-        pyplot.plot(self.sinc_filter)
-        self.filtered_signal = self.filtered_signal * self.sinc_filter
-        pyplot.plot(self.filtered_signal)
-        pyplot.show()
+        add_signal = self.filtered_signal * self.sinc_filter
+        add_signal = add_signal * (10 ** (3/20)) #gain schnage in db
+        self.filtered_signal = add_signal+(add_signal-self.filtered_signal)
+
+        #xf = numpy.linspace(0.0, 1.0 / (2.0 * (1.0/44100.0)), 768)
+        #fig, ax = pyplot.subplots()
+
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(self.filtered_signal[:1536 // 2]))
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(add_signal[:1536 // 2]))
+        #pyplot.show()
+
         self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
         self.filtered_signal = self.filtered_signal[512:-512]
 
