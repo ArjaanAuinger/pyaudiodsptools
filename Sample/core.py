@@ -243,7 +243,7 @@ def MakeChunks(float32_array_input,chunk_size):
     number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
     if len(float32_array_input) % number_of_chunks != 0:
         samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
-        print(number_of_chunks)
+        #print(number_of_chunks)
         float32_array_input = numpy.append(float32_array_input,numpy.zeros(samples_to_append,dtype="float32"))
     float32_chunked_array = numpy.split(float32_array_input, number_of_chunks)
     return float32_chunked_array
@@ -351,13 +351,12 @@ sine_full = CreateSinewave(44100,1000,4096)
 music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
 music_raw = music_raw.astype('float32')
 music_raw = music_raw / 32768
-music_raw = VolumeChange(music_raw,-6.0)
-music_raw = music_raw[0:88200]
+music_raw = VolumeChange(music_raw,-0.0)
+music_raw = music_raw[0:88575]
 #music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
 music_raw_copy = copy.deepcopy(music_raw)
 sine_copy = copy.deepcopy(sine_full)
 music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
-
 sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
@@ -367,13 +366,13 @@ eq3test = EffectEQ3Band.EQ3Band()
 #comptest = CreateCompressor()
 #reverbtest = CreateReverb()
 simplehighcuttest = EffectSimpleFilter.CreateHighCutFilter(2000,512)
-simplelowcuttest = EffectEQ3BandFFT.CreateLowCutFilter(10000,512)
+simplelowcuttest = EffectEQ3BandFFT.CreateEQ3BandFFT(200,0,800,6,10000,0,512)
 start = timeit.default_timer()
 
 counter = 0
 for counter in range(len(music_chunked)):
     #pyplot.plot(music_chunked[counter])
-    music_chunked[counter] = simplelowcuttest.applyfilter(music_chunked[counter])
+    music_chunked[counter] = simplelowcuttest.apply(music_chunked[counter])
 
     #print(music_chunked)
     counter += 1
@@ -385,6 +384,7 @@ stop = timeit.default_timer()
 print('Time: ', (stop - start)*1000, 'ms')
 
 music_copy = CombineChunks(music_chunked)
+#music_copy = music_copy[512:]
 sine_copy = CombineChunks(sine_chunked)
 
 

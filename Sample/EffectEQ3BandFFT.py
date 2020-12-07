@@ -1,114 +1,185 @@
-from __future__ import print_function
-from __future__ import division
+#from __future__ import print_function
+#from __future__ import division
 
 import numpy
 import matplotlib.pyplot as pyplot
 
-# Example code, computes the coefficients of a high-pass windowed-sinc filter.
 
-class CreateHighCutFilter:
-    def __init__(self,cutoff_frequency,chunk_size):
+"""########################################################################################
+Creating a 3 Band FFT Equalizer class/device.
+Init Parameters: 
+    lowshelf_frequency: Shelving frequency in Hertz [float] (for example 400.0)
+    lowshelf_db: Gain in decibel [float] (for example 3.0 or -3.0)
+    highshelf_frequency: Shelving frequency in Hertz [float] (for example 400 or 400.0)
+    highshelf_db: Gain in decibel [float] (for example 3.0 or -3.0)
+
+applyfilter
+    Applies the filter to a 44100Hz/32 or 64 bit float signal of your choice.
+    Values of the numpy-array must be between -1.0 and 1.0
+###########################################################################################"""
+
+
+class CreateEQ3BandFFT:
+    def __init__(self,lowshelf_frequency,lowshelf_db,midband_frequency,midband_db,highshelf_frequency,highshelf_db,chunk_size):
+        #Basic
+        self.chunk_size = chunk_size
         self.fS = 44100  # Sampling rate.
-        self.fH = cutoff_frequency # Cutoff frequency.
-        self.filter_length = chunk_size + 1 #Filter length, must be odd.
+
+        #Highshelf Properties
+        self.fH_highshelf = highshelf_frequency
+        self.highshelf_db = highshelf_db
+
+        #Lowshelf Properties
+        self.fH_lowshelf = lowshelf_frequency
+        self.lowshelf_db = lowshelf_db
+
+        #Lowshelf Properties
+        self.fH_midband = midband_frequency
+        self.midband_db = midband_db
+
+        #Setting Kaiser-Windows properties
+        self.filter_length = 129 # Filter length, must be odd.
+        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end =  chunk_size - (self.filter_length // 2)
 
 
+        ################ Create Lowcut (Finally becomes Highshelf) Sinc Filter and FFT ##################
         # Compute sinc filter.
-        self.sinc_filter = numpy.sinc(2 * self.fH / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
-        #pyplot.plot(self.sinc_filter)
+        self.sinc_filter_highshelf = numpy.sinc(
+            2 * self.fH_highshelf / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
-        self.sinc_filter *= numpy.blackman(self.filter_length)
-        #pyplot.plot(self.sinc_filter)
+        self.sinc_filter_highshelf *= numpy.kaiser(self.filter_length,6.0)
 
         # Normalize to get unity gain.
-        self.sinc_filter /= numpy.sum(self.sinc_filter)
-        #print(len(self.sinc_filter))
+        self.sinc_filter_highshelf /= numpy.sum(self.sinc_filter_highshelf)
 
-        self.filtered_signal = numpy.zeros(chunk_size*3)
-        self.float32_array_input_1 = numpy.zeros(chunk_size)
-        self.float32_array_input_2 = numpy.zeros(chunk_size)
-        self.float32_array_input_3 = numpy.zeros(chunk_size)
+        #Spectral inversion to make lowcut out of highcut
+        self.sinc_filter_highshelf = -self.sinc_filter_highshelf
+        self.sinc_filter_highshelf[(self.filter_length - 1) // 2] += 1
 
-
-        self.cut_size = numpy.int16((self.filter_length-1)/2)
-        self.sinc_filter = numpy.append(self.sinc_filter,numpy.zeros(((len(self.sinc_filter)*2)-3)))
-        self.sinc_filter = numpy.fft.fft(self.sinc_filter)
-
-    def applyfilter(self,float32_array_input):
-        self.float32_array_input_3 = self.float32_array_input_2
-        self.float32_array_input_2 = self.float32_array_input_1
-        self.float32_array_input_1 = float32_array_input
-
-        self.filtered_signal = numpy.concatenate(
-            (self.float32_array_input_3,self.float32_array_input_2,self.float32_array_input_1),axis=None)
-
-        self.filtered_signal = numpy.fft.fft(self.filtered_signal)
-        self.filtered_signal = self.filtered_signal * self.sinc_filter
-        self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
-        self.filtered_signal = self.filtered_signal[512:-512]
-
-        return self.filtered_signal
+        #Zero Padding the Sinc Filter to the length of the input array for easier processing
+        #You don't need to use numpy.convolve when input-array and sinc-filter array are the same lenght, just multiply
+        self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(((len(self.sinc_filter_highshelf) * 2) - 3)))
+        self.sinc_filter_highshelf = numpy.fft.fft(self.sinc_filter_highshelf)
 
 
-
-
-class CreateLowCutFilter:
-    def __init__(self,cutoff_frequency,chunk_size):
-        self.fS = 44100  # Sampling rate.
-        self.fH = cutoff_frequency  # Cutoff frequency.
-        self.filter_length =  25#chunk_size + 1  # Filter length, must be odd.
+        ################ Create Highcut (Finally becomes Lowshelf) Sinc Filter and FFT ##################
         # Compute sinc filter.
-        self.sinc_filter = numpy.sinc(
-            2 * self.fH / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+        self.sinc_filter_lowshelf = numpy.sinc(
+            2 * self.fH_lowshelf / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
-        self.sinc_filter *= numpy.kaiser(self.filter_length,2.0)
+        self.sinc_filter_lowshelf *= numpy.kaiser(self.filter_length,6.0)
 
         # Normalize to get unity gain.
-        self.sinc_filter /= numpy.sum(self.sinc_filter)
-        #print(len(self.sinc_filter))
+        self.sinc_filter_lowshelf /= numpy.sum(self.sinc_filter_lowshelf)
 
-        self.sinc_filter = -self.sinc_filter
-        self.sinc_filter[(self.filter_length - 1) // 2] += 1
+        #Zero Padding the Sinc Filter to the length of the input array
+        self.sinc_filter_lowshelf = numpy.append(self.sinc_filter_lowshelf, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_lowshelf = numpy.append(self.sinc_filter_lowshelf, numpy.zeros(((len(self.sinc_filter_lowshelf) * 2) - 3)))
+        self.sinc_filter_lowshelf = numpy.fft.fft(self.sinc_filter_lowshelf)
 
+
+        ################ Create Midband (Lowpass+Highpass) Sinc Filter and FFT ##################
+        # Compute sinc filter.
+        self.sinc_filter_mid_lowpass = numpy.sinc(
+            2 * (self.fH_midband-10) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+
+        # Apply window.
+        self.sinc_filter_mid_lowpass *= numpy.kaiser(self.filter_length,6.0)
+
+        # Normalize to get unity gain.
+        self.sinc_filter_mid_lowpass /= numpy.sum(self.sinc_filter_mid_lowpass)
+
+        # Compute sinc filter.
+        self.sinc_filter_mid_highpass = numpy.sinc(
+            2 * (self.fH_midband+10) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+
+        # Apply window.
+        self.sinc_filter_mid_highpass *= numpy.kaiser(self.filter_length,6.0)
+
+        # Normalize to get unity gain.
+        self.sinc_filter_mid_highpass /= numpy.sum(self.sinc_filter_mid_highpass)
+
+        #Spectral inversion to make highpass
+        self.sinc_filter_mid_highpass = -self.sinc_filter_mid_highpass
+        self.sinc_filter_mid_highpass[(self.filter_length - 1) // 2] += 1
+
+        #Zero Padding the Sinc Filter to the length of the input array
+        self.sinc_filter_mid_lowpass = numpy.append(self.sinc_filter_mid_lowpass, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_mid_lowpass = numpy.append(self.sinc_filter_mid_lowpass, numpy.zeros(((len(self.sinc_filter_mid_lowpass) * 2) - 3)))
+        self.sinc_filter_mid_lowpass = numpy.fft.fft(self.sinc_filter_mid_lowpass)
+
+        #Zero Padding the Sinc Filter to the length of the input array
+        self.sinc_filter_mid_highpass = numpy.append(self.sinc_filter_mid_highpass, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_mid_highpass = numpy.append(self.sinc_filter_mid_highpass, numpy.zeros(((len(self.sinc_filter_mid_highpass) * 2) - 3)))
+        self.sinc_filter_mid_highpass = numpy.fft.fft(self.sinc_filter_mid_highpass)
+
+
+
+        #Initializing arrays
         self.filtered_signal = numpy.zeros(chunk_size * 3)
         self.original_signal = numpy.zeros(chunk_size * 3)
         self.float32_array_input_1 = numpy.zeros(chunk_size)
         self.float32_array_input_2 = numpy.zeros(chunk_size)
         self.float32_array_input_3 = numpy.zeros(chunk_size)
-
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
-        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(chunk_size - self.filter_length + 1))
-        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(((len(self.sinc_filter) * 2) - 3)))
-        self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
 
-    def applyfilter(self, float32_array_input):
+    def apply(self, float32_array_input):
+        #Loading new chunk and replacing old ones
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
 
-        self.filtered_signal = numpy.concatenate(
+        self.original_signal = numpy.concatenate(
             (self.float32_array_input_3,self.float32_array_input_2,self.float32_array_input_1),axis=None)
 
-        self.filtered_signal = numpy.fft.fft(self.filtered_signal)
-        add_signal = self.filtered_signal * self.sinc_filter
-        add_signal = add_signal * (10 ** (3/20)) #gain schnage in db
-        self.filtered_signal = add_signal+(add_signal-self.filtered_signal)
+        #FFT for transforming samples from time-domain to frequency-domain
+        signal_fft = numpy.fft.fft(self.original_signal)
+
+        #Highshelf processing
+        filtered_signal_highshelf = signal_fft * self.sinc_filter_highshelf #applying sinc filter
+
+        #Lowshelf processing FFT
+        filtered_signal_lowshelf = signal_fft * self.sinc_filter_lowshelf #applying sinc filter
+
+        #Midband processing
+        filtered_signal_midband = signal_fft * self.sinc_filter_mid_highpass * self.sinc_filter_mid_lowpass #applying lowpass
+        #filtered_signal_midband = filtered_signal_midband * self.sinc_filter_mid_highpass #applying highpass to just get mid
+
+        #Highshelf processing Time-Domain
+        filtered_signal_highshelf = numpy.fft.ifft(filtered_signal_highshelf)
+        filtered_signal_highshelf = filtered_signal_highshelf[self.array_slice_value_start:-self.array_slice_value_end]
+        filtered_signal_highshelf = (filtered_signal_highshelf*(10**(self.highshelf_db/20))) - filtered_signal_highshelf
+
+        #Lowshelf processing Time-Domain
+        filtered_signal_lowshelf = numpy.fft.ifft(filtered_signal_lowshelf)
+        filtered_signal_lowshelf = filtered_signal_lowshelf[self.array_slice_value_start:-self.array_slice_value_end]
+        filtered_signal_lowshelf = (filtered_signal_lowshelf*(10**(self.lowshelf_db/20))) - filtered_signal_lowshelf
+
+        #Midband processing Time-Domain
+        filtered_signal_midband = numpy.fft.ifft(filtered_signal_midband)
+        filtered_signal_midband = filtered_signal_midband[self.array_slice_value_start:-self.array_slice_value_end]
+        filtered_signal_midband = (filtered_signal_midband*(10**(self.midband_db/20))) - filtered_signal_midband
+
+
+        #Mixing signals
+        float_array_output = filtered_signal_midband + self.float32_array_input_2 + filtered_signal_lowshelf + filtered_signal_highshelf
+
+        return float_array_output.real.astype('float32')
+
+
+
 
         #xf = numpy.linspace(0.0, 1.0 / (2.0 * (1.0/44100.0)), 768)
         #fig, ax = pyplot.subplots()
 
-        #ax.plot(xf, 2.0 / 1536 * numpy.abs(self.filtered_signal[:1536 // 2]))
-        #ax.plot(xf, 2.0 / 1536 * numpy.abs(add_signal[:1536 // 2]))
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(add_signal_lowshelf[:1536 // 2]))
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(filtered_signal[:1536 // 2]))
         #pyplot.show()
-
-        self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
-        self.filtered_signal = self.filtered_signal[512:-512]
-
-        return self.filtered_signal
-
-        #self.filtered_signal = (self.original_signal*self.sinc_filter)
-        #self.filtered_signal = self.original_signal + (self.filtered_signal - self.original_signal)
-
+        # pyplot.plot(filtered_signal_highshelf)
+        # pyplot.plot(self.float32_array_input_2)
+        # pyplot.show()
