@@ -2,61 +2,20 @@ import numpy
 import sys
 import math
 import array
-"""
-    def frame_count(ms=None):
 
-        if ms is not None:
-            return ms * (44100 / 1000.0)
-        else:
-            return float(len(seg) // frame_width)
+"""########################################################################################
+Creating a Compressor class/device.
+Init Parameters: 
+    threshold_in_db: Defines when the compressor get active, decrease for more compression; negative [float] or [int]
+    ratio: ratio/amount of compression in power; [float] between 0.0 and 1.0
+    attack: attack of the compressor in milliseconds; [float] or [int]
+    highshelf_db: release of the compressor in milliseconds; [float] 
 
-    thresh_rms = 32767 * db_to_float(threshold)
+applycompressor
+    Applies the compressor to a 44100Hz/32 bit float numpy array of your choice.
 
-    look_frames = int(frame_count(ms=attack))
-
-    def rms_at(frame_i):
-        return get_sample_slice(frame_i - look_frames, frame_i).rms
-
-    def db_over_threshold(rms):
-        if rms == 0: return 0.0
-        db = ratio_to_db(rms / thresh_rms)
-        return max(db, 0)
-
-    output = []
-
-    # amount to reduce the volume of the audio by (in dB)
-    attenuation = 0.0
-
-    attack_frames = frame_count(ms=attack)
-    release_frames = frame_count(ms=release)
-    for i in seg:
-        rms_now = rms_at(i)
-
-        # with a ratio of 4.0 this means the volume will exceed the threshold by
-        # 1/4 the amount (of dB) that it would otherwise
-        max_attenuation = (1 - (1.0 / ratio)) * db_over_threshold(rms_now)
-
-        attenuation_inc = max_attenuation / attack_frames
-        attenuation_dec = max_attenuation / release_frames
-
-        if rms_now > thresh_rms and attenuation <= max_attenuation:
-            attenuation += attenuation_inc
-            attenuation = min(attenuation, max_attenuation)
-        else:
-            attenuation -= attenuation_dec
-            attenuation = max(attenuation, 0)
-
-        frame = seg.get_frame(i)
-        if attenuation != 0.0:
-            frame = audioop.mul(frame,
-                                seg.sample_width,
-                                db_to_float(-attenuation))
-
-        output.append(frame)
-
-    return seg._spawn(data=b''.join(output))
-"""
-
+This class introduces no latency.
+###########################################################################################"""
 
 class CreateCompressor:
     def __init__(self,threshold_in_db=-15,ratio=0.60,attack=3.1,release=30.1):

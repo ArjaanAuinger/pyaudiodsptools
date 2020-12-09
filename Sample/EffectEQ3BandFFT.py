@@ -1,21 +1,21 @@
-#from __future__ import print_function
-#from __future__ import division
-
 import numpy
-import matplotlib.pyplot as pyplot
+#import matplotlib.pyplot as pyplot
 
 
 """########################################################################################
 Creating a 3 Band FFT Equalizer class/device.
 Init Parameters: 
-    lowshelf_frequency: Shelving frequency in Hertz [float] (for example 400.0)
-    lowshelf_db: Gain in decibel [float] (for example 3.0 or -3.0)
-    highshelf_frequency: Shelving frequency in Hertz [float] (for example 400 or 400.0)
-    highshelf_db: Gain in decibel [float] (for example 3.0 or -3.0)
+    lowshelf_frequency: Shelving frequency in Hertz [float] or [int] (for example 400.0)
+    lowshelf_db: Gain in decibel [float] or [int] (for example 3.0 or -3.0)
+    highshelf_frequency: Shelving frequency in Hertz [float] or [int] (for example 400 or 400.0)
+    highshelf_db: Gain in decibel [float] or [int] (for example 3.0 or -3.0)
 
 applyfilter
-    Applies the filter to a 44100Hz/32 or 64 bit float signal of your choice.
-    Values of the numpy-array must be between -1.0 and 1.0
+    Applies the filter to a 44100Hz/32 bit float signal of your choice.
+    Should operate with values between -1.0 and 1.0
+    
+This class introduces latency equal to the value of chunk_size. 
+Optimal operation with chunk_size=512
 ###########################################################################################"""
 
 
@@ -38,7 +38,7 @@ class CreateEQ3BandFFT:
         self.midband_db = midband_db
 
         #Setting Kaiser-Windows properties
-        self.filter_length = 129 # Filter length, must be odd.
+        self.filter_length = (chunk_size//2)-1 # Filter length, must be odd.
         self.array_slice_value_start = chunk_size + (self.filter_length // 2)
         self.array_slice_value_end =  chunk_size - (self.filter_length // 2)
 
@@ -46,7 +46,7 @@ class CreateEQ3BandFFT:
         ################ Create Lowcut (Finally becomes Highshelf) Sinc Filter and FFT ##################
         # Compute sinc filter.
         self.sinc_filter_highshelf = numpy.sinc(
-            2 * self.fH_highshelf / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+            2 * (self.fH_highshelf-self.fH_highshelf/4) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
         self.sinc_filter_highshelf *= numpy.kaiser(self.filter_length,6.0)
@@ -58,6 +58,7 @@ class CreateEQ3BandFFT:
         self.sinc_filter_highshelf = -self.sinc_filter_highshelf
         self.sinc_filter_highshelf[(self.filter_length - 1) // 2] += 1
 
+
         #Zero Padding the Sinc Filter to the length of the input array for easier processing
         #You don't need to use numpy.convolve when input-array and sinc-filter array are the same lenght, just multiply
         self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(chunk_size - self.filter_length + 1))
@@ -68,7 +69,7 @@ class CreateEQ3BandFFT:
         ################ Create Highcut (Finally becomes Lowshelf) Sinc Filter and FFT ##################
         # Compute sinc filter.
         self.sinc_filter_lowshelf = numpy.sinc(
-            2 * self.fH_lowshelf / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+            2 * (self.fH_lowshelf + self.fH_lowshelf/4) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
         self.sinc_filter_lowshelf *= numpy.kaiser(self.filter_length,6.0)
@@ -85,7 +86,7 @@ class CreateEQ3BandFFT:
         ################ Create Midband (Lowpass+Highpass) Sinc Filter and FFT ##################
         # Compute sinc filter.
         self.sinc_filter_mid_lowpass = numpy.sinc(
-            2 * (self.fH_midband-10) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+            2 * (self.fH_midband+self.fH_midband/4) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
         self.sinc_filter_mid_lowpass *= numpy.kaiser(self.filter_length,6.0)
@@ -95,7 +96,7 @@ class CreateEQ3BandFFT:
 
         # Compute sinc filter.
         self.sinc_filter_mid_highpass = numpy.sinc(
-            2 * (self.fH_midband+10) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
+            2 * (self.fH_midband-self.fH_midband/4) / self.fS * (numpy.arange(self.filter_length) - (self.filter_length - 1) / 2))
 
         # Apply window.
         self.sinc_filter_mid_highpass *= numpy.kaiser(self.filter_length,6.0)
@@ -147,7 +148,8 @@ class CreateEQ3BandFFT:
         filtered_signal_lowshelf = signal_fft * self.sinc_filter_lowshelf #applying sinc filter
 
         #Midband processing
-        filtered_signal_midband = signal_fft * self.sinc_filter_mid_highpass * self.sinc_filter_mid_lowpass #applying lowpass
+        filtered_signal_midband = signal_fft * (self.sinc_filter_mid_highpass * self.sinc_filter_mid_lowpass)#applying lowpass
+        #filtered_signal_midband = filtered_signal_midband*(1/self.fS)
         #filtered_signal_midband = filtered_signal_midband * self.sinc_filter_mid_highpass #applying highpass to just get mid
 
         #Highshelf processing Time-Domain
@@ -171,6 +173,13 @@ class CreateEQ3BandFFT:
 
         return float_array_output.real.astype('float32')
 
+
+        #xf = numpy.linspace(0.0, 1.0 / (2.0 * (1.0/44100.0)), 768)
+        #fig, ax = pyplot.subplots()
+
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(filtered_signal_highshelf[:1536 // 2]))
+        #ax.plot(xf, 2.0 / 1536 * numpy.abs(signal_fft[:1536 // 2]))
+        #pyplot.show()
 
 
 

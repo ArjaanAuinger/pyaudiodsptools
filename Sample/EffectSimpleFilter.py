@@ -70,6 +70,7 @@ class CreateLowCutFilter:
         self.sinc_filter /= numpy.sum(self.sinc_filter)
         #print(len(self.sinc_filter))
 
+        #Spectral inversion to create Lowcut from Highcut
         self.sinc_filter = -self.sinc_filter
         self.sinc_filter[(self.filter_length - 1) // 2] += 1
 
