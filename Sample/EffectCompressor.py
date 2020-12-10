@@ -2,6 +2,7 @@ import numpy
 import sys
 import math
 import array
+import config
 
 """########################################################################################
 Creating a Compressor class/device.
@@ -21,10 +22,10 @@ class CreateCompressor:
     def __init__(self,threshold_in_db=-15,ratio=0.60,attack=3.1,release=30.1):
         self.ratio = ratio
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
-        self.attack_window = numpy.zeros(int((44100 / 1000) * attack),dtype="float32")
+        self.attack_window = numpy.zeros(int((config.sampling_rate / 1000) * attack),dtype="float32")
         self.attack_envelope = numpy.linspace(1.0,self.ratio,num=len(self.attack_window),dtype="float32")
 
-        self.release_window = numpy.zeros(int((44100 / 1000) * release), dtype="float32")
+        self.release_window = numpy.zeros(int((config.sampling_rate / 1000) * release), dtype="float32")
         self.release_envelope = numpy.linspace(self.ratio,1.0, num=len(self.release_window), dtype="float32")
         self.counter_freeze = 0
         self.x = 0

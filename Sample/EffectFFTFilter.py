@@ -1,16 +1,31 @@
-from __future__ import print_function
-from __future__ import division
-
+import config
 import numpy
 import matplotlib.pyplot as pyplot
 
-# Example code, computes the coefficients of a high-pass windowed-sinc filter.
+
+"""########################################################################################
+Creating an FFT Lowcut or Highcut Filter.
+Init Parameters: 
+    cutoff frequency: Cutoff frequency in Hertz [float] or [int] (for example 400.0)
+
+applyfilter
+    Applies the filter to a 44100Hz/32 bit float signal of your choice.
+    Should operate with values between -1.0 and 1.0
+
+This class introduces latency equal to the value of chunk_size. 
+Optimal operation with chunk_size=512
+###########################################################################################"""
+
 
 class CreateHighCutFilter:
-    def __init__(self,cutoff_frequency,chunk_size):
-        self.fS = 44100  # Sampling rate.
+    def __init__(self,cutoff_frequency):
+        chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency # Cutoff frequency.
-        self.filter_length = chunk_size + 1 #Filter length, must be odd.
+        self.filter_length = (chunk_size//2)-1 #Filter length, must be odd.
+
+        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end = chunk_size - (self.filter_length // 2)
 
 
         # Compute sinc filter.
@@ -32,10 +47,11 @@ class CreateHighCutFilter:
 
 
         self.cut_size = numpy.int16((self.filter_length-1)/2)
+        self.sinc_filter = numpy.append(self.sinc_filter,numpy.zeros(chunk_size - self.filter_length + 1))
         self.sinc_filter = numpy.append(self.sinc_filter,numpy.zeros(((len(self.sinc_filter)*2)-3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
-    def applyfilter(self,float32_array_input):
+    def applyhighcutfilter(self,float32_array_input):
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
@@ -46,18 +62,22 @@ class CreateHighCutFilter:
         self.filtered_signal = numpy.fft.fft(self.filtered_signal)
         self.filtered_signal = self.filtered_signal * self.sinc_filter
         self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
-        self.filtered_signal = self.filtered_signal[512:-512]
+        self.filtered_signal = self.filtered_signal[self.array_slice_value_start:-self.array_slice_value_end]
 
-        return self.filtered_signal
+        return self.filtered_signal.real.astype('float32')
 
 
 
 
 class CreateLowCutFilter:
-    def __init__(self,cutoff_frequency,chunk_size):
-        self.fS = 44100  # Sampling rate.
+    def __init__(self,cutoff_frequency):
+        chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
-        self.filter_length = chunk_size + 1  # Filter length, must be odd.
+        self.filter_length = (chunk_size//2)-1  # Filter length, must be odd.
+
+        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end = chunk_size - (self.filter_length // 2)
 
         # Compute sinc filter.
         self.sinc_filter = numpy.sinc(
@@ -80,11 +100,12 @@ class CreateLowCutFilter:
         self.float32_array_input_3 = numpy.zeros(chunk_size)
 
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
+        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(chunk_size - self.filter_length + 1))
         self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(((len(self.sinc_filter) * 2) - 3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
 
-    def applyfilter(self, float32_array_input):
+    def applylowcutfilter(self, float32_array_input):
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
@@ -95,6 +116,6 @@ class CreateLowCutFilter:
         self.filtered_signal = numpy.fft.fft(self.filtered_signal)
         self.filtered_signal = (self.filtered_signal * self.sinc_filter)
         self.filtered_signal = numpy.fft.ifft(self.filtered_signal)
-        self.filtered_signal = self.filtered_signal[512:-512]
+        self.filtered_signal = self.filtered_signal[self.array_slice_value_start:-self.array_slice_value_end]
 
-        return self.filtered_signal
+        return self.filtered_signal.real.astype('float32')

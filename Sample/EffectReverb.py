@@ -1,31 +1,23 @@
 import numpy
 import EffectFilter
-
+import EffectDelay
 
 class CreateReverb:
-    def __init__(self,time_in_samples=6000,early_feedback_loops=20,late_feedback_loops=20):
-        self.time_in_samples = time_in_samples
-        self.max_samples = time_in_samples*(early_feedback_loops+2)
-        self.delay_buffer = numpy.zeros(int(self.max_samples), dtype="float32")
-        self.early_feedback_ramp = numpy.linspace(0.5,0.1,num=early_feedback_loops,dtype="float32")
-        self.early_highcut_filter = EffectFilter.CreateHighCutFilter(400)
+    def __init__(self,time_in_ms=5000):
+        self.early_reflection_delay_1 = EffectDelay.CreateDelay(17,2,0,100,False,True,True)
+        self.early_reflection_delay_2 = EffectDelay.CreateDelay(29, 1, 0, 150,False,True,True)
+        self.early_reflection_delay_3 = EffectDelay.CreateDelay(400, 1, 0, 600, False, True, True)
+        self.early_reflection_delay_4 = EffectDelay.CreateDelay(1000, 1, 0, 2000, False, True, True)
 
 
     def applyreverb(self,float32_array_input):
+        delay_line_1 = self.early_reflection_delay_1.applydelay(float32_array_input)
+        delay_line_2 = self.early_reflection_delay_2.applydelay(float32_array_input)
+        delay_line_3 = self.early_reflection_delay_3.applydelay(float32_array_input)
+        delay_line_4 = self.early_reflection_delay_4.applydelay(float32_array_input)
 
-        #Early Reflections
-        float32_array_filtered=self.early_highcut_filter.applyfilter(float32_array_input)
+        float32_array_input = delay_line_1 + delay_line_2 + delay_line_3 + delay_line_4 + float32_array_input
 
-        for counter in range(len(self.early_feedback_ramp)):
-            processed_input = float32_array_filtered * self.early_feedback_ramp[counter]
-            start_index = self.time_in_samples*(counter+1)
-            end_index = (self.time_in_samples*(counter+1))+len(float32_array_input)
-            self.delay_buffer[start_index:end_index] += processed_input
-
-        float32_array_input += self.delay_buffer[0:len(float32_array_input)]
-        self.delay_buffer = self.delay_buffer[len(float32_array_input):len(self.delay_buffer)]
-        self.delay_buffer = numpy.append(self.delay_buffer,numpy.zeros(len(float32_array_input),dtype="float32"))
-
-        return(float32_array_filtered)
+        return float32_array_input
 
     

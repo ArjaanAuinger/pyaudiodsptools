@@ -2,6 +2,7 @@ import numpy
 import sys
 import math
 import array
+import config
 
 
 class CreateGate:

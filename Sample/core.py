@@ -10,7 +10,7 @@ from EffectCompressor import CreateCompressor
 from EffectGate import CreateGate
 from EffectDelay import CreateDelay
 from EffectReverb import CreateReverb
-import EffectSimpleFilter
+import EffectFFTFilter
 import EffectEQ3BandFFT
 import EffectEQ3Band
 
@@ -254,9 +254,6 @@ def CombineChunks(numpy_array_input):
         float32_array_output = numpy.append(float32_array_output,chunk)
     return float32_array_output
 
-def InvertSignal(int_array_input):
-    int_array_output = numpy.invert(int_array_input)
-    return(int_array_output)
 
 #Still need to add clipping
 def MixSignals(*args):
@@ -361,18 +358,19 @@ sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
 eq3test = EffectEQ3Band.EQ3Band()
-#tremolotest = CreateTremolo(0.6)
-#delaytest = CreateDelay()
-#comptest = CreateCompressor()
-#reverbtest = CreateReverb()
-simplehighcuttest = EffectSimpleFilter.CreateHighCutFilter(2000,512)
-simplelowcuttest = EffectEQ3BandFFT.CreateEQ3BandFFT(100,3,700,-4,8000,5,512)
+tremolotest = CreateTremolo(0.6)
+delaytest = CreateDelay()
+comptest = CreateCompressor()
+reverbtest = CreateReverb()
+lowcut = EffectFFTFilter.CreateLowCutFilter(200)
+eq3band = EffectEQ3BandFFT.CreateEQ3BandFFT(100,2,700,-4,8000,5)
+print(len(music_raw)//512)
 start = timeit.default_timer()
 
 counter = 0
 for counter in range(len(music_chunked)):
     #pyplot.plot(music_chunked[counter])
-    music_chunked[counter] = simplelowcuttest.apply(music_chunked[counter])
+    music_chunked[counter] = reverbtest.applyreverb(music_chunked[counter])
 
     #print(music_chunked)
     counter += 1

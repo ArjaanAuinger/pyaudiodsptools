@@ -1,4 +1,5 @@
 import numpy
+import config
 #import matplotlib.pyplot as pyplot
 
 
@@ -20,10 +21,10 @@ Optimal operation with chunk_size=512
 
 
 class CreateEQ3BandFFT:
-    def __init__(self,lowshelf_frequency,lowshelf_db,midband_frequency,midband_db,highshelf_frequency,highshelf_db,chunk_size):
+    def __init__(self,lowshelf_frequency,lowshelf_db,midband_frequency,midband_db,highshelf_frequency,highshelf_db):
         #Basic
-        self.chunk_size = chunk_size
-        self.fS = 44100  # Sampling rate.
+        chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
 
         #Highshelf Properties
         self.fH_highshelf = highshelf_frequency
