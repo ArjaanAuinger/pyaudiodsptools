@@ -1,10 +1,10 @@
 import numpy
 
-class EQ3Band:
-    def __init__(self):
-        self.LowdBgain = 0.1
-        self.MiddBgain = -0.1
-        self.HighdBgain = 12.1
+class CreateEQ3Band:
+    def __init__(self,low_shelf_frequency,low_shelf_gain,mid_frequency,mid_gain,high_shelf_frequency,high_shelf_gain):
+        self.LowdBgain = low_shelf_gain
+        self.MiddBgain = mid_gain
+        self.HighdBgain = high_shelf_gain
         self.Fs = 44100.0
         self.Pi = numpy.pi
 
@@ -18,21 +18,21 @@ class EQ3Band:
         self.PrevOriginalChunkSampleHigh = numpy.array([0.0,0.0,0.0])
 
         #Low Band Options and Coefficients
-        self.LowShelfFreq = 130.0
+        self.LowShelfFreq = low_shelf_frequency
         self.LowShelfQ = 1.0;
         self.LowA = numpy.sqrt(10**(self.LowdBgain/20))
         self.LowShelfw0 = 2 * numpy.pi * self.LowShelfFreq / self.Fs
         self.LowShelfalpha = numpy.sin(self.LowShelfw0)/2 * numpy.sqrt((self.LowA + 1/self.LowA)*(1/self.LowShelfQ-1)+2)
 
         #Mid Band Options and Coefficients
-        self.MidFreq = 700.0
+        self.MidFreq = mid_frequency
         self.MidQ = 2.5;
         self.MidA = numpy.sqrt(10**(self.MiddBgain/20))
         self.Midw0 = 2 * numpy.pi * self.MidFreq / self.Fs
         self.Midalpha = numpy.sin(self.Midw0) / (2 * self.MidQ)
 
         #High Shelf Options ans Coefficients
-        self.HighShelfFreq = 7000.0
+        self.HighShelfFreq = high_shelf_frequency
         self.HighShelfQ = 1.0;
         self.HighA = numpy.sqrt(10**(self.HighdBgain/20))
         self.HighShelfw0 = 2 * numpy.pi * self.HighShelfFreq / self.Fs

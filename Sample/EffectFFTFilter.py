@@ -51,7 +51,7 @@ class CreateHighCutFilter:
         self.sinc_filter = numpy.append(self.sinc_filter,numpy.zeros(((len(self.sinc_filter)*2)-3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
-    def applyhighcutfilter(self,float32_array_input):
+    def apply(self,float32_array_input):
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
@@ -105,7 +105,7 @@ class CreateLowCutFilter:
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
 
-    def applylowcutfilter(self, float32_array_input):
+    def apply(self, float32_array_input):
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
