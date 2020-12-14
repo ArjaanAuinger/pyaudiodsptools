@@ -28,9 +28,6 @@ from EffectLimiter import CreateLimiter
 from EffectHardDistortion import CreateHardDistortion
 from EffectTremolo import CreateTremolo
 
-
-
-
 #512 samples@44.1 kHz = 11.7ms = 0.00117s
 #print(numpy.finfo('float64').max)# 1.79
 #print(numpy.finfo('float64').min)# -1.79
@@ -40,22 +37,6 @@ from EffectTremolo import CreateTremolo
 #print(numpy.iinfo('int16').min)# -32768
 #print(numpy.iinfo('int8').max)# 127
 #print(numpy.iinfo('int8').min)# -128
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 #y = CreateWhitenoise(44100,512)
 #y3 = CreateSquarewave(44100,1000,512)

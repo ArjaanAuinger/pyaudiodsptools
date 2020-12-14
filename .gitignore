@@ -126,3 +126,4 @@ dmypy.json
 .pyre/
 
 *.wav
+*.wav.asd
