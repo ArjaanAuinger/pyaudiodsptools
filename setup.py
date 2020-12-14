@@ -16,7 +16,7 @@ setup(
     long_description=readme,
     author='Arjaan Auinger',
     author_email='arjaan.auinger@gmail.com',
-    url='https://github.com/kennethreitz/samplemod',
+    url='https://github.com/ArjaanAuinger/pyaudiodsptools',
     license=license,
     packages=find_packages(exclude=('tests', 'docs'))
 )
