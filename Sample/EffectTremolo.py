@@ -2,7 +2,7 @@ import numpy
 import copy
 
 class CreateTremolo:
-    def __init__(self,tremolo_depth,lfo_in_hertz=4.5):
+    def __init__(self,tremolo_depth=0.4,lfo_in_hertz=4.5):
         self.sin_sample_rate = 44100
         self.sin_time_array = numpy.arange(numpy.float32(self.sin_sample_rate/lfo_in_hertz))
         self.sin_lfo = numpy.float32((((numpy.sin(2 * numpy.pi * lfo_in_hertz*self.sin_time_array/self.sin_sample_rate)
@@ -16,8 +16,8 @@ class CreateTremolo:
             self.sin_lfo_copy = numpy.append(self.sin_lfo_copy,self.sin_lfo)
         self.sin_lfo_chunk = self.sin_lfo_copy[:current_input_lenght]
         self.sin_lfo_copy = self.sin_lfo_copy[-(len(self.sin_lfo_copy)-current_input_lenght):]
-        float_array_output = numpy.multiply(float_array_input,self.sin_lfo_chunk, out=int_array_input, dtype='float32', casting='unsafe')
+        float_array_output = numpy.multiply(float_array_input, self.sin_lfo_chunk, dtype='float32', casting='unsafe')
         return float_array_output
 
-    def tremoloreset(self):
+    def reset(self):
         self.sin_lfo_copy = copy.deepcopy(self.sin_lfo)

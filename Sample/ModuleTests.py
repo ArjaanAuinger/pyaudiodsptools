@@ -15,7 +15,7 @@ import struct
 
 from Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
 from Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBuTo16Bit, Convert16BitTodBu, ConvertdBVTo16Bit
-from Utility import Convert16BitTodBV,Dither16BitTo8Bit, Dither32BitIntTo16BitInt, Import24BitWavTo16Bit,InfodBV
+from Utility import Convert16BitTodBV,Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpy32BitFloat,InfodBV
 from Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt,Numpy16BitIntToMonoWav44kHz
 from EffectCompressor import CreateCompressor
 from EffectGate import CreateGate
@@ -44,9 +44,7 @@ from EffectTremolo import CreateTremolo
 sine_full = CreateSinewave(44100,10000,4096)
 #sine_copy = copy.deepcopy(sine_full)
 
-music_raw = MonoWavToNumpy16BitInt('testmusic_mono.wav')
-music_raw = music_raw.astype('float32')
-music_raw = music_raw / 32768
+music_raw = MonoWavToNumpy32BitFloat('testmusic_mono.wav')
 music_raw = VolumeChange(music_raw,-0.0)
 #music_raw = music_raw[0:88575]
 #music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
@@ -56,13 +54,16 @@ music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
 sine_chunked = MakeChunks(sine_copy,chunk_size=512)
 
 
-eq3test = CreateEQ3Band(100,2,700,-4,8000,5)
+
 harddistortion = CreateHardDistortion()
-tremolotest = CreateTremolo(0.6)
+tremolotest = CreateTremolo()
 delaytest = CreateDelay()
 comptest = CreateCompressor()
+limitertest = CreateLimiter()
+gatetest = CreateGate()
 reverbtest = CreateReverb()
 lowcut = CreateLowCutFilter(200)
+eq3test = CreateEQ3Band(100,2,700,-4,8000,5)
 eq3band = CreateEQ3BandFFT(100,2,700,-4,8000,5)
 #print(len(music_raw)//512)
 start = timeit.default_timer()

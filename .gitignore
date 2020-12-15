@@ -15,7 +15,7 @@ downloads/
 eggs/
 .eggs/
 lib/
-scripts/
+Scripts/
 lib64/
 parts/
 sdist/
@@ -125,5 +125,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Audio Files
 *.wav
 *.wav.asd
+/Scripts/

@@ -12,7 +12,7 @@ applyfilter
     Applies the filter to a 44100Hz/32 bit float signal of your choice.
     Should operate with values between -1.0 and 1.0
 
-This class introduces latency equal to the value of chunk_size. 
+This class introduces latency equal to the value of chunk_size found in config.py. 
 Optimal operation with chunk_size=512
 ###########################################################################################"""
 

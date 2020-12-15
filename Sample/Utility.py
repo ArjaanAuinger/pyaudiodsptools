@@ -3,6 +3,8 @@ import sys
 import wave
 import math
 import struct
+import copy
+import config
 
 """######Converts a long numpy array in multiple small ones for processing#####"""
 def MakeChunks(float32_array_input,chunk_size):
@@ -78,7 +80,7 @@ def Dither32BitIntTo16BitInt(int_array_input):
     # int_array_output = (int_array_dithered*65535).astype('int32')
     return int_array_dithered
 
-
+"""
 #BSD Licence
 #Not Tested!
 def Import24BitWavTo16Bit(wav_file,data):
@@ -92,7 +94,7 @@ def Import24BitWavTo16Bit(wav_file,data):
         a[:, :, sampwidth:] = (a[:, :, sampwidth - 1:sampwidth] >> 7) * 255
         result = a.view('<i4').reshape(a.shape[:-1])
         return result
-
+"""
 def InfodBV(float_array_input):
     count = 0
     added_sample_value = 0.0
@@ -127,7 +129,15 @@ def MonoWavToNumpy16BitInt(wav_file_path):
     samples = wav_file.getnframes()
     audio = wav_file.readframes(samples)
     audio_as_numpy_array = numpy.frombuffer(audio, dtype=numpy.int16)
-    return(audio_as_numpy_array)
+    return audio_as_numpy_array
+
+def MonoWavToNumpy32BitFloat(wav_file_path):
+    wav_file = wave.open(wav_file_path)
+    samples = wav_file.getnframes()
+    audio = wav_file.readframes(samples)
+    audio_as_numpy_array = numpy.frombuffer(audio, dtype=numpy.int16)
+    audio_as_numpy_array = (audio_as_numpy_array.astype('float32')/32768)
+    return audio_as_numpy_array
 
 def Numpy16BitIntToMonoWav44kHz(filename, data):
     """
@@ -137,8 +147,6 @@ def Numpy16BitIntToMonoWav44kHz(filename, data):
     ----------
     filename : string or open file handle
         Output wav file
-    rate : int
-        The sample rate (in samples/sec).
     data : ndarray
         A 1-D or 2-D numpy array of either integer or float data-type.
 
@@ -176,9 +184,9 @@ def Numpy16BitIntToMonoWav44kHz(filename, data):
         else:
             noc = data.shape[1]
         bits = data.dtype.itemsize * 8
-        sbytes = 44100*(bits // 8)*noc
+        sbytes = config.sampling_rate*(bits // 8)*noc
         ba = noc * (bits // 8)
-        fid.write(struct.pack('<ihHIIHH', 16, comp, noc, 44100, sbytes, ba, bits))
+        fid.write(struct.pack('<ihHIIHH', 16, comp, noc, config.sampling_rate, sbytes, ba, bits))
         # data chunk
         fid.write(b'data')
         fid.write(struct.pack('<i', data.nbytes))

@@ -1,7 +1,7 @@
 import numpy
 
 class CreateLimiter:
-    def __init__(self, threshold_in_db, attack_coeff=0.9, release_coeff=0.992, delay=10):
+    def __init__(self, threshold_in_db=-0.1, attack_coeff=0.9, release_coeff=0.992, delay=10):
         self.delay_index = 0
         self.envelope = 0
         self.gain = 1
@@ -10,7 +10,6 @@ class CreateLimiter:
         self.release_coeff = release_coeff
         self.attack_coeff = attack_coeff
         self.threshold = numpy.int16((10 ** (threshold_in_db/20))*32767)
-        print(self.threshold)
 
     def apply(self, signal):
         for idx, sample in enumerate(signal):
