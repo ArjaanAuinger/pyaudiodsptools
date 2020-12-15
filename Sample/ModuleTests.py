@@ -27,6 +27,7 @@ from EffectEQ3Band import CreateEQ3Band
 from EffectLimiter import CreateLimiter
 from EffectHardDistortion import CreateHardDistortion
 from EffectTremolo import CreateTremolo
+from EffectSaturator import CreateSaturator
 
 #512 samples@44.1 kHz = 11.7ms = 0.00117s
 #print(numpy.finfo('float64').max)# 1.79
@@ -60,6 +61,7 @@ tremolotest = CreateTremolo()
 delaytest = CreateDelay()
 comptest = CreateCompressor()
 limitertest = CreateLimiter()
+saturatortest = CreateSaturator()
 gatetest = CreateGate()
 reverbtest = CreateReverb()
 lowcut = CreateLowCutFilter(200)
@@ -71,7 +73,7 @@ start = timeit.default_timer()
 counter = 0
 for counter in range(len(music_chunked)):
     #pyplot.plot(music_chunked[counter])
-    music_chunked[counter] = reverbtest.applyreverb(music_chunked[counter])
+    music_chunked[counter] = saturatortest.apply(music_chunked[counter])
 
     #print(music_chunked)
     counter += 1
@@ -80,7 +82,8 @@ for counter in range(len(music_chunked)):
 
 stop = timeit.default_timer()
 
-print('Time: ', (stop - start)*1000, 'ms')
+print('Total Time: ', (stop - start)*1000, 'ms')
+print('Time per Chunk', ((stop - start)*1000)/len(music_chunked),'ms')
 
 music_copy = CombineChunks(music_chunked)
 #music_copy = music_copy[512:]

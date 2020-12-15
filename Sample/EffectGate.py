@@ -18,7 +18,7 @@ class CreateGate:
         self.x = 0
         self.y = 0
         self.comp_state ="Resting"
-        print(self.attack_envelope)
+        #print(self.attack_envelope)
         # x = attack envelope counter
         # y = release envelope counter
 
