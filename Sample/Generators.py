@@ -1,20 +1,21 @@
 import numpy
+import config
 
-def CreateSinewave(sin_sample_rate, sin_frequency, sin_buffer_size):
-    sin_time_array = numpy.arange(sin_buffer_size)
+def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=config.sampling_rate):
+    sin_time_array = numpy.arange(sin_length_in_samples)
     sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency*sin_time_array/sin_sample_rate))
     return (sin_amplitude_array)
 
-def CreateSquarewave(square_sample_rate, square_frequency, square_buffer_size):
-    square_time_array = numpy.arange(square_buffer_size)
-    square_amplitude_array = numpy.int16(32767*numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
-    square_amplitude_array = numpy.where(square_amplitude_array>0,32767,-32767)
+def CreateSquarewave(square_frequency, square_length_in_samples,square_sample_rate=config.sampling_rate):
+    square_time_array = numpy.arange(square_length_in_samples)
+    square_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
+    square_amplitude_array = numpy.where(square_amplitude_array>0,1.0,-1.0)
     return (square_amplitude_array)
 
-def CreateWhitenoise(sample_rate,buffer_size):
-    whitenoise_time_array = numpy.arange(buffer_size)
-    freqs = numpy.abs(numpy.fft.fftfreq(buffer_size, 1/sample_rate))
-    f = numpy.zeros(buffer_size)
+def CreateWhitenoise(noise_length_in_samples,sample_rate=config.sampling_rate):
+    whitenoise_time_array = numpy.arange(noise_length_in_samples)
+    freqs = numpy.abs(numpy.fft.fftfreq(noise_length_in_samples, 1/sample_rate))
+    f = numpy.zeros(noise_length_in_samples)
     idx = numpy.where(numpy.logical_and(freqs>=20, freqs<=20000))[0]
     f[idx] = 1
 
@@ -29,6 +30,6 @@ def CreateWhitenoise(sample_rate,buffer_size):
 
     whitenoise_amplitude_array = numpy.float32(fftnoise(f))
 
-    return whitenoise_time_array,whitenoise_amplitude_array
+    return whitenoise_amplitude_array
 
 

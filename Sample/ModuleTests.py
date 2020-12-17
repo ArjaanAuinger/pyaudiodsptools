@@ -20,7 +20,7 @@ from Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt,Numpy16Bi
 from EffectCompressor import CreateCompressor
 from EffectGate import CreateGate
 from EffectDelay import CreateDelay
-from EffectReverb import CreateReverb
+from _EffectReverb import CreateReverb
 from EffectFFTFilter import CreateHighCutFilter, CreateLowCutFilter
 from EffectEQ3BandFFT import CreateEQ3BandFFT
 from EffectEQ3Band import CreateEQ3Band
@@ -48,11 +48,12 @@ sine_full = CreateSinewave(44100,10000,4096)
 music_raw = MonoWavToNumpy32BitFloat('testmusic_mono.wav')
 music_raw = VolumeChange(music_raw,-0.0)
 #music_raw = music_raw[0:88575]
-#music_raw = numpy.append(music_raw,numpy.zeros(88200,dtype="float32"))
+
 music_raw_copy = copy.deepcopy(music_raw)
 sine_copy = copy.deepcopy(sine_full)
-music_chunked = MakeChunks(music_raw_copy,chunk_size=512)
-sine_chunked = MakeChunks(sine_copy,chunk_size=512)
+
+music_chunked = MakeChunks(music_raw_copy)
+sine_chunked = MakeChunks(sine_copy)
 
 
 
@@ -67,20 +68,16 @@ reverbtest = CreateReverb()
 lowcut = CreateLowCutFilter(200)
 eq3test = CreateEQ3Band(100,2,700,-4,8000,5)
 eq3band = CreateEQ3BandFFT(100,2,700,-4,8000,5)
-#print(len(music_raw)//512)
-start = timeit.default_timer()
+
+
+start = time.perf_counter()
 
 counter = 0
 for counter in range(len(music_chunked)):
-    #pyplot.plot(music_chunked[counter])
     music_chunked[counter] = saturatortest.apply(music_chunked[counter])
-
-    #print(music_chunked)
     counter += 1
-    #pyplot.plot(sine_chunked[counter])
-    #pyplot.show()
 
-stop = timeit.default_timer()
+stop = time.perf_counter()
 
 print('Total Time: ', (stop - start)*1000, 'ms')
 print('Time per Chunk', ((stop - start)*1000)/len(music_chunked),'ms')

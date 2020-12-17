@@ -1,7 +1,7 @@
 import numpy
-import sys
-import math
-import array
+#import sys
+#import math
+#import array
 import config
 
 """########################################################################################
@@ -19,13 +19,13 @@ This class introduces no latency.
 ###########################################################################################"""
 
 class CreateCompressor:
-    def __init__(self,threshold_in_db=-15,ratio=0.60,attack=3.1,release=30.1):
+    def __init__(self,threshold_in_db=-15,ratio=0.60,attack_in_ms=3.1,release_in_ms=30.1):
         self.ratio = ratio
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
-        self.attack_window = numpy.zeros(int((config.sampling_rate / 1000) * attack),dtype="float32")
+        self.attack_window = numpy.zeros(int((config.sampling_rate / 1000) * attack_in_ms),dtype="float32")
         self.attack_envelope = numpy.linspace(1.0,self.ratio,num=len(self.attack_window),dtype="float32")
 
-        self.release_window = numpy.zeros(int((config.sampling_rate / 1000) * release), dtype="float32")
+        self.release_window = numpy.zeros(int((config.sampling_rate / 1000) * release_in_ms), dtype="float32")
         self.release_envelope = numpy.linspace(self.ratio,1.0, num=len(self.release_window), dtype="float32")
         self.counter_freeze = 0
         self.x = 0
@@ -106,80 +106,3 @@ class CreateCompressor:
             if counter_freeze == False:
                 counter += 1
         return int_array_input
-
-
-
-
-
-
-
-
-
-
-
-
-
-"""
-
-
-            if int_array_input_bool_threshold[counter] == False and attack_follow == False:
-                release_follow = True
-                comp_state = "Release"
-
-            if int_array_input_bool_threshold[counter] == True:
-                if comp_state == "Release":
-                    release_break == True
-                attack_follow = True
-                comp_state = "Attack"
-
-
-            if attack_follow == True:
-                if release_break == True:
-                    x = int(y*(x_max/y_max))
-                y = 0
-                release_follow = False
-                if x < x_max:
-                    if int_array_input[counter] >= 0.0:
-                        int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*self.attack_envelope[x])
-                    else:
-                        int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x])
-                if x >= x_max:
-                    if int_array_input_bool_threshold[(counter)] == True:
-                        if int_array_input[counter] >= 0.0:
-                            int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x_max-1])
-                        else:
-                            int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x_max-1])
-                    else:
-                        attack_follow = False
-                        release_follow = True
-                x += 1
-                    #if int_array_input[counter] >= 0.0:
-                        #int_array_input[counter] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*(1/self.ratio))
-                    #else:
-                        #int_array_input[counter] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * (1 / self.ratio))
-                #x += 1
-                #counter +=1
-
-            if release_follow == True:
-                x = 0
-                if y < y_max:
-                    print(int_array_input[(counter)])
-                    if int_array_input[(counter)] >= 0.0:
-                        int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*self.release_envelope[y])
-                    else:
-                        int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.release_envelope[y])
-                if y >= y_max:
-                    release_follow = False
-                    comp_state = "Nothing"
-                y +=1
-                #counter +=1
-
-        return int_array_input
-
-
-"""
-
-
-
-
-

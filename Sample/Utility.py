@@ -7,7 +7,7 @@ import copy
 import config
 
 """######Converts a long numpy array in multiple small ones for processing#####"""
-def MakeChunks(float32_array_input,chunk_size):
+def MakeChunks(float32_array_input,chunk_size=config.chunk_size):
     number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
     if len(float32_array_input) % number_of_chunks != 0:
         samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
