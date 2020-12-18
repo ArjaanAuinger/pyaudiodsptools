@@ -4,10 +4,10 @@ import wave
 import math
 import struct
 import copy
-import config
+from .config import chunk_size, sampling_rate
 
 """######Converts a long numpy array in multiple small ones for processing#####"""
-def MakeChunks(float32_array_input,chunk_size=config.chunk_size):
+def MakeChunks(float32_array_input,chunk_size=chunk_size):
     number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
     if len(float32_array_input) % number_of_chunks != 0:
         samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
@@ -184,9 +184,9 @@ def Numpy16BitIntToMonoWav44kHz(filename, data):
         else:
             noc = data.shape[1]
         bits = data.dtype.itemsize * 8
-        sbytes = config.sampling_rate*(bits // 8)*noc
+        sbytes = sampling_rate*(bits // 8)*noc
         ba = noc * (bits // 8)
-        fid.write(struct.pack('<ihHIIHH', 16, comp, noc, config.sampling_rate, sbytes, ba, bits))
+        fid.write(struct.pack('<ihHIIHH', 16, comp, noc, sampling_rate, sbytes, ba, bits))
         # data chunk
         fid.write(b'data')
         fid.write(struct.pack('<i', data.nbytes))

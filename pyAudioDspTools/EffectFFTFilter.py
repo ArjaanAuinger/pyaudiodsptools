@@ -1,4 +1,4 @@
-import config
+from .config import chunk_size, sampling_rate
 import numpy
 
 """########################################################################################
@@ -17,8 +17,8 @@ Optimal operation with chunk_size=512
 
 class CreateHighCutFilter:
     def __init__(self, cutoff_frequency):
-        chunk_size = config.chunk_size
-        self.fS = config.sampling_rate  # Sampling rate.
+        #self.chunk_size = chunk_size
+        self.fS = sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
         self.filter_length = (chunk_size // 2) - 1  # Filter length, must be odd.
 
@@ -65,8 +65,8 @@ class CreateHighCutFilter:
 
 class CreateLowCutFilter:
     def __init__(self, cutoff_frequency):
-        chunk_size = config.chunk_size
-        self.fS = config.sampling_rate  # Sampling rate.
+        #self.chunk_size = chunk_size
+        self.fS = sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
         self.filter_length = (chunk_size // 2) - 1  # Filter length, must be odd.
 

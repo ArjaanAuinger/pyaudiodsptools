@@ -1,14 +1,14 @@
 import numpy
-import config
+from .config import chunk_size, sampling_rate
 
 
-def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=config.sampling_rate):
+def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=sampling_rate):
     sin_time_array = numpy.arange(sin_length_in_samples)
     sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency * sin_time_array / sin_sample_rate))
     return sin_amplitude_array
 
 
-def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_rate=config.sampling_rate):
+def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_rate=sampling_rate):
     square_time_array = numpy.arange(square_length_in_samples)
     square_amplitude_array = numpy.float32(
         numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
@@ -16,7 +16,7 @@ def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_r
     return square_amplitude_array
 
 
-def CreateWhitenoise(noise_length_in_samples, sample_rate=config.sampling_rate):
+def CreateWhitenoise(noise_length_in_samples, sample_rate=sampling_rate):
     whitenoise_time_array = numpy.arange(noise_length_in_samples)
     freqs = numpy.abs(numpy.fft.fftfreq(noise_length_in_samples, 1 / sample_rate))
     f = numpy.zeros(noise_length_in_samples)

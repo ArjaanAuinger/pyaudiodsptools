@@ -9,7 +9,7 @@ as the other scripts.
 
 import matplotlib.pyplot as pyplot
 
-import config
+from pyAudioDspTools.config import chunk_size, sampling_rate
 
 import os
 import sys
@@ -32,21 +32,21 @@ import struct
 # print(numpy.iinfo('int8').min)# -128
 
 
-from Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
-from Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBuTo16Bit, Convert16BitTodBu, ConvertdBVTo16Bit
-from Utility import Convert16BitTodBV, Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpy32BitFloat, InfodBV
-from Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt, Numpy16BitIntToMonoWav44kHz
-from EffectCompressor import CreateCompressor
-from EffectGate import CreateGate
-from EffectDelay import CreateDelay
-from _EffectReverb import CreateReverb
-from EffectFFTFilter import CreateHighCutFilter, CreateLowCutFilter
-from EffectEQ3BandFFT import CreateEQ3BandFFT
-from EffectEQ3Band import CreateEQ3Band
-from EffectLimiter import CreateLimiter
-from EffectHardDistortion import CreateHardDistortion
-from EffectTremolo import CreateTremolo
-from EffectSaturator import CreateSaturator
+from pyAudioDspTools.Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
+from pyAudioDspTools.Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBuTo16Bit, Convert16BitTodBu, ConvertdBVTo16Bit
+from pyAudioDspTools.Utility import Convert16BitTodBV, Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpy32BitFloat, InfodBV
+from pyAudioDspTools.Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt, Numpy16BitIntToMonoWav44kHz
+from pyAudioDspTools.EffectCompressor import CreateCompressor
+from pyAudioDspTools.EffectGate import CreateGate
+from pyAudioDspTools.EffectDelay import CreateDelay
+from pyAudioDspTools._EffectReverb import CreateReverb
+from pyAudioDspTools.EffectFFTFilter import CreateHighCutFilter, CreateLowCutFilter
+from pyAudioDspTools.EffectEQ3BandFFT import CreateEQ3BandFFT
+from pyAudioDspTools.EffectEQ3Band import CreateEQ3Band
+from pyAudioDspTools.EffectLimiter import CreateLimiter
+from pyAudioDspTools.EffectHardDistortion import CreateHardDistortion
+from pyAudioDspTools.EffectTremolo import CreateTremolo
+from pyAudioDspTools.EffectSaturator import CreateSaturator
 
 print('####Creating Generators####')
 sine_full = CreateSinewave(1000, 4096)
@@ -86,8 +86,8 @@ print('done...')
 print('')
 
 print('####config.py settings####')
-print('Sample Rate is: ', config.sampling_rate, 'Hz')
-print('Chunk Size / Buffer Size is: ', config.chunk_size, 'samples')
+print('Sample Rate is: ', sampling_rate, 'Hz')
+print('Chunk Size / Buffer Size is: ', chunk_size, 'samples')
 print('')
 
 

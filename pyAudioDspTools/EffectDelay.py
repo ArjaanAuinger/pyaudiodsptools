@@ -1,19 +1,19 @@
 import numpy
 import math
-import config
-import EffectFFTFilter
+from .config import chunk_size, sampling_rate
+from .EffectFFTFilter import CreateLowCutFilter, CreateHighCutFilter
 
 class CreateDelay:
     def __init__(self,time_in_ms=500,feedback_loops=2,lowcut_filter_frequency=40,highcut_filter_frequency=12000,use_lowcut_filter=False,use_highcut_filter=False,wet=False):
-        self.time_in_samples = numpy.int(time_in_ms*(config.sampling_rate/1000))
+        self.time_in_samples = numpy.int(time_in_ms*(sampling_rate/1000))
         self.wet = wet
         self.max_samples = self.time_in_samples*(feedback_loops+2)
         self.delay_buffer = numpy.zeros(int(self.max_samples), dtype="float32")
         self.feedback_ramp = numpy.linspace(0.5,0.1,num=feedback_loops,dtype="float32")
         self.use_lowcut_filter = use_lowcut_filter
         self.use_highcut_filter = use_highcut_filter
-        self.LowCutFilter = EffectFFTFilter.CreateLowCutFilter(lowcut_filter_frequency)
-        self.HighcutFilter = EffectFFTFilter.CreateHighCutFilter(highcut_filter_frequency)
+        self.LowCutFilter = CreateLowCutFilter(lowcut_filter_frequency)
+        self.HighcutFilter = CreateHighCutFilter(highcut_filter_frequency)
 
     def apply(self,float32_array_input):
         if (self.use_lowcut_filter == True):
