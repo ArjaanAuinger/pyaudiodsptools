@@ -35,7 +35,7 @@ class CreateCompressor:
         # y = release envelope counter
 
 
-    def applycompressor(self,int_array_input):
+    def apply(self,int_array_input):
         int_array_input_bool_threshold = numpy.absolute(int_array_input) > self.threshold_power
         release_follow = False
         attack_follow = None

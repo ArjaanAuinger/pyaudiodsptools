@@ -1,10 +1,11 @@
 import numpy
+import copy
 
 class CreateHardDistortion():
     def __init__(self):
         self.linear_limit = 0.8
 
-    def apply(float_array_input):
+    def apply(self,float_array_input):
         hard_limit = 1.0
         linear_limit = 0.8
         clip_limit = linear_limit + float(numpy.pi / 2 * (hard_limit - linear_limit))

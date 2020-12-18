@@ -23,7 +23,7 @@ class CreateGate:
         # y = release envelope counter
 
 
-    def applygate(self,int_array_input):
+    def apply(self,int_array_input):
         int_array_input_bool_threshold = numpy.absolute(int_array_input) > self.threshold_power
         int_array_input = int_array_input * self.depth
         release_follow = False

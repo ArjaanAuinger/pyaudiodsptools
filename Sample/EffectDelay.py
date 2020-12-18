@@ -15,7 +15,7 @@ class CreateDelay:
         self.LowCutFilter = EffectFFTFilter.CreateLowCutFilter(lowcut_filter_frequency)
         self.HighcutFilter = EffectFFTFilter.CreateHighCutFilter(highcut_filter_frequency)
 
-    def applydelay(self,float32_array_input):
+    def apply(self,float32_array_input):
         if (self.use_lowcut_filter == True):
             float32_array_input = self.LowCutFilter.applylowcutfilter(float32_array_input)
         if (self.use_highcut_filter == True):

@@ -1,4 +1,5 @@
 import numpy
+import copy
 
 class CreateEQ3Band:
     def __init__(self,low_shelf_frequency,low_shelf_gain,mid_frequency,mid_gain,high_shelf_frequency,high_shelf_gain):
