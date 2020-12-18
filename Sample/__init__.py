@@ -1,4 +1,4 @@
-
+import numpy
 
 from .config import chunk_size, sampling_rate
 from .Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
