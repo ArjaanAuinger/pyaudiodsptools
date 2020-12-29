@@ -1,22 +1,21 @@
 from .config import chunk_size, sampling_rate
 import numpy
 
-"""########################################################################################
-Creating an FFT Lowcut or Highcut Filter.
-Init Parameters: 
-    cutoff frequency: Cutoff frequency in Hertz [float] or [int] (for example 400.0)
-
-applyfilter
-    Applies the filter to a 44100Hz/32 bit float signal of your choice.
-    Should operate with values between -1.0 and 1.0
-
-This class introduces latency equal to the value of chunk_size found in config.py. 
-Optimal operation with chunk_size=512
-###########################################################################################"""
-
 
 class CreateHighCutFilter:
-    def __init__(self, cutoff_frequency):
+    """Creating a FFT filter audio-effect class/device.
+
+    Cuts the upper frequencies of a signal.
+    Is overloaded with basic settings.
+    This class introduces latency equal to chunk_size.
+
+    Parameters
+    ----------
+    cutoff_frequency : int or float
+        Sets the rolloff frequency for the high cut filter.
+
+    """
+    def __init__(self, cutoff_frequency=8000):
         #self.chunk_size = chunk_size
         self.fS = sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
@@ -48,6 +47,19 @@ class CreateHighCutFilter:
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
     def apply(self, float32_array_input):
+        """Applying the filter to a numpy-array
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The previously processed array, should be the exact same size as the input array
+
+        """
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input
@@ -64,7 +76,19 @@ class CreateHighCutFilter:
 
 
 class CreateLowCutFilter:
-    def __init__(self, cutoff_frequency):
+    """Creating a FFT filter audio-effect class/device.
+
+    Cuts the lower frequencies of a signal.
+    Is overloaded with basic settings.
+    This class introduces latency equal to chunk_size.
+
+    Parameters
+    ----------
+    cutoff_frequency : int or float
+        Sets the rolloff frequency for the high cut filter.
+
+    """
+    def __init__(self, cutoff_frequency=160):
         #self.chunk_size = chunk_size
         self.fS = sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
@@ -99,6 +123,19 @@ class CreateLowCutFilter:
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
     def apply(self, float32_array_input):
+        """Applying the filter to a numpy-array
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The previously processed array, should be the exact same size as the input array
+
+        """
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1
         self.float32_array_input_1 = float32_array_input

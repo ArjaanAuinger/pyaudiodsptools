@@ -2,6 +2,20 @@ import numpy
 #import copy
 
 class CreateSaturator:
+    """Creating a saturator audio-effect class/device
+
+    Is a wave-shaper and messes with dynamic range, but doesn't introduce latency.
+
+    Parameters
+    ----------
+    saturation_threshold_in_db : int or float
+        Sets the threshold when the saturator becomes active. Must be negative.
+    makeup_gain : float
+        Makeup for Volume-loss due to wave-shaping in decibel.
+    mode : string
+        The mode of the Saturator. Can be 'hard' or 'soft'
+
+    """
     def __init__(self, saturation_threshold_in_db=-20.0, makeup_gain=2.0, mode='hard'):
         self.saturation_coeff = 10 ** (saturation_threshold_in_db/20)
         self.makeup_gain = makeup_gain
@@ -11,6 +25,19 @@ class CreateSaturator:
             self.mode = 1
 
     def apply(self, float_array_input):
+        """Applying the Saturator to a numpy-array
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The processed array, should be the exact same size as the input array
+
+        """
         remember_negative = numpy.where(float_array_input<0,True,False)
         float_array_input = numpy.abs(float_array_input)
 

@@ -4,21 +4,25 @@ import numpy
 #import array
 from .config import sampling_rate, chunk_size
 
-"""########################################################################################
-Creating a Compressor class/device.
-Init Parameters: 
-    threshold_in_db: Defines when the compressor get active, decrease for more compression; negative [float] or [int]
-    ratio: ratio/amount of compression in power; [float] between 0.0 and 1.0
-    attack: attack of the compressor in milliseconds; [float] or [int]
-    highshelf_db: release of the compressor in milliseconds; [float] 
-
-applycompressor
-    Applies the compressor to a 44100Hz/32 bit float numpy array of your choice.
-
-This class introduces no latency.
-###########################################################################################"""
-
 class CreateCompressor:
+    """Creating a compressor audio-effect class/device
+
+    Can be used to limit dynamic range of a signal. Very effective on drums for example.
+    Is overloaded with basic settings.
+    This class introduces no latency.
+
+    Parameters
+    ----------
+    threshold_in_db : int or float
+        Sets the threshold when the gate becomes active. Must be negative.
+    ratio : float
+        The depth of the effect. Must be a value between >0 and <1.0
+    attack : float
+        The attack-time of the gate in milliseconds
+    release : float
+        The release-time of the gate in milliseconds
+
+    """
     def __init__(self,threshold_in_db=-15,ratio=0.60,attack_in_ms=3.1,release_in_ms=30.1):
         self.ratio = ratio
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
@@ -36,6 +40,19 @@ class CreateCompressor:
 
 
     def apply(self,int_array_input):
+        """Applying the Gate to a numpy-array
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The processed array, should be the exact same size as the input array
+
+        """
         int_array_input_bool_threshold = numpy.absolute(int_array_input) > self.threshold_power
         release_follow = False
         attack_follow = None

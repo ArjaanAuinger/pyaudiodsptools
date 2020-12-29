@@ -1,13 +1,28 @@
+
+
 import numpy
 
 
-# import sys
-# import math
-# import array
-# import config
-
-
 class CreateGate:
+    """Creating a gate audio-effect class/device
+
+    Can be used to duck noise and bleed. Very effective on drums for example.
+    For cleaner effect use short attack time and moderate release time.
+    Is overloaded with basic settings.
+    This class introduces no latency.
+
+    Parameters
+    ----------
+    threshold_in_db : int or float
+        Sets the threshold when the gate becomes active. Must be negative
+    depth : float
+        The depth of the effect. Must be a value between >0 and <1.0
+    attack : float
+        The attack-time of the gate in milliseconds
+    release : float
+        The release-time of the gate in milliseconds
+
+    """
     def __init__(self, threshold_in_db=-5, depth=0.1, attack=3.1, release=200.1):
         self.depth = depth
         self.threshold_power = numpy.float32(10 ** (threshold_in_db / 20))
@@ -25,6 +40,19 @@ class CreateGate:
         # y = release envelope counter
 
     def apply(self, int_array_input):
+        """Applying the Gate to a numpy-array
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The processed array, should be the exact same size as the input array
+
+        """
         int_array_input_bool_threshold = numpy.absolute(int_array_input) > self.threshold_power
         int_array_input = int_array_input * self.depth
         release_follow = False
@@ -97,64 +125,3 @@ class CreateGate:
                 counter += 1
 
         return int_array_input
-
-
-"""
-
-
-            if int_array_input_bool_threshold[counter] == False and attack_follow == False:
-                release_follow = True
-                comp_state = "Release"
-
-            if int_array_input_bool_threshold[counter] == True:
-                if comp_state == "Release":
-                    release_break == True
-                attack_follow = True
-                comp_state = "Attack"
-
-
-            if attack_follow == True:
-                if release_break == True:
-                    x = int(y*(x_max/y_max))
-                y = 0
-                release_follow = False
-                if x < x_max:
-                    if int_array_input[counter] >= 0.0:
-                        int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*self.attack_envelope[x])
-                    else:
-                        int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x])
-                if x >= x_max:
-                    if int_array_input_bool_threshold[(counter)] == True:
-                        if int_array_input[counter] >= 0.0:
-                            int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x_max-1])
-                        else:
-                            int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.attack_envelope[x_max-1])
-                    else:
-                        attack_follow = False
-                        release_follow = True
-                x += 1
-                    #if int_array_input[counter] >= 0.0:
-                        #int_array_input[counter] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*(1/self.ratio))
-                    #else:
-                        #int_array_input[counter] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * (1 / self.ratio))
-                #x += 1
-                #counter +=1
-
-            if release_follow == True:
-                x = 0
-                if y < y_max:
-                    print(int_array_input[(counter)])
-                    if int_array_input[(counter)] >= 0.0:
-                        int_array_input[(counter)] = self.threshold_power + ((int_array_input[(counter)] - self.threshold_power)*self.release_envelope[y])
-                    else:
-                        int_array_input[(counter)] = -self.threshold_power - ((-int_array_input[(counter)] - self.threshold_power) * self.release_envelope[y])
-                if y >= y_max:
-                    release_follow = False
-                    comp_state = "Nothing"
-                y +=1
-                #counter +=1
-
-        return int_array_input
-
-
-"""

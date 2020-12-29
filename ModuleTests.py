@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # matplotlib for debugging
 """
-Module Testing for pyaudiodsptools. Just run the script, make sure that the script is in the same folder
-as the other scripts.
+Module Testing for pyaudiodsptools. Just $pip install pyAudioDspTools.
+Then create a scratch and run this script.
 """
 
 
@@ -33,9 +33,9 @@ import struct
 
 
 from pyAudioDspTools.Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
-from pyAudioDspTools.Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBuTo16Bit, Convert16BitTodBu, ConvertdBVTo16Bit
-from pyAudioDspTools.Utility import Convert16BitTodBV, Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpy32BitFloat, InfodBV
-from pyAudioDspTools.Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt, Numpy16BitIntToMonoWav44kHz
+from pyAudioDspTools.Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBVTo16Bit
+from pyAudioDspTools.Utility import Convert16BitTodBV, Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpyFloat, InfodBV
+from pyAudioDspTools.Utility import InfodBV16Bit, VolumeChange, MonoWavToNumpy16BitInt, NumpyFloatToWav
 from pyAudioDspTools.EffectCompressor import CreateCompressor
 from pyAudioDspTools.EffectGate import CreateGate
 from pyAudioDspTools.EffectDelay import CreateDelay
@@ -43,10 +43,11 @@ from pyAudioDspTools._EffectReverb import CreateReverb
 from pyAudioDspTools.EffectFFTFilter import CreateHighCutFilter, CreateLowCutFilter
 from pyAudioDspTools.EffectEQ3BandFFT import CreateEQ3BandFFT
 from pyAudioDspTools.EffectEQ3Band import CreateEQ3Band
-from pyAudioDspTools.EffectLimiter import CreateLimiter
+from pyAudioDspTools.EffectSoftClipper import CreateSoftClipper
 from pyAudioDspTools.EffectHardDistortion import CreateHardDistortion
 from pyAudioDspTools.EffectTremolo import CreateTremolo
 from pyAudioDspTools.EffectSaturator import CreateSaturator
+from pyAudioDspTools.EffectBitCrusher import CreateBitCrusher
 
 print('####Creating Generators####')
 sine_full = CreateSinewave(1000, 4096)
@@ -57,11 +58,11 @@ noise_full = CreateWhitenoise(4096)
 print('White Noise ok..-')
 print('')
 
-# music_raw = MonoWavToNumpy32BitFloat('testmusic_mono.wav')
-# music_raw = VolumeChange(music_raw,-0.0)
-# music_raw = music_raw[0:88575]
-# music_raw_copy = copy.deepcopy(music_raw)
-# music_chunked = MakeChunks(music_raw_copy)
+music_raw = MonoWavToNumpyFloat('testmusic_mono.wav')
+#music_raw = VolumeChange(music_raw,5.0)
+#music_raw = music_raw[0:88575]
+music_raw_copy = copy.deepcopy(music_raw)
+music_chunked = MakeChunks(music_raw_copy)
 
 print('####Making Copies####')
 sine_copy = copy.deepcopy(sine_full)
@@ -74,7 +75,8 @@ harddistortiontest = CreateHardDistortion()
 tremolotest = CreateTremolo()
 delaytest = CreateDelay()
 compressortest = CreateCompressor()
-limitertest = CreateLimiter()
+softclippertest = CreateSoftClipper()
+bitcrushertest = CreateBitCrusher()
 saturatortest = CreateSaturator()
 gatetest = CreateGate()
 reverbtest = CreateReverb()
@@ -96,18 +98,6 @@ start = time.perf_counter()
 counter = 0
 for counter in range(len(sine_chunked)):
     sine_chunked[counter] = saturatortest.apply(sine_chunked[counter])
-    counter += 1
-stop = time.perf_counter()
-print('Success!')
-print('Total Time: ', (stop - start) * 1000, 'ms')
-print('Time per Chunk', ((stop - start) * 1000) / len(sine_chunked), 'ms')
-print('')
-
-print('####Testing Limiter####')
-start = time.perf_counter()
-counter = 0
-for counter in range(len(sine_chunked)):
-    sine_chunked[counter] = limitertest.apply(sine_chunked[counter])
     counter += 1
 stop = time.perf_counter()
 print('Success!')
@@ -211,19 +201,45 @@ print('Total Time: ', (stop - start) * 1000, 'ms')
 print('Time per Chunk', ((stop - start) * 1000) / len(sine_chunked), 'ms')
 print('')
 
-# music_copy = CombineChunks(music_chunked)
+print('####Testing Soft Clipper####')
+start = time.perf_counter()
+counter = 0
+for counter in range(len(sine_chunked)):
+    sine_chunked[counter] = softclippertest.apply(sine_chunked[counter])
+    counter += 1
+stop = time.perf_counter()
+print('Success!')
+print('Total Time: ', (stop - start) * 1000, 'ms')
+print('Time per Chunk', ((stop - start) * 1000) / len(sine_chunked), 'ms')
+print('')
+
+
+print('####Testing Bit Crusher####')
+start = time.perf_counter()
+counter = 0
+for counter in range(len(music_chunked)):
+    music_chunked[counter] = bitcrushertest.apply(music_chunked[counter])
+    counter += 1
+stop = time.perf_counter()
+print('Success!')
+print('Total Time: ', (stop - start) * 1000, 'ms')
+print('Time per Chunk', ((stop - start) * 1000) / len(music_chunked), 'ms')
+print('')
+
+
+music_copy = CombineChunks(music_chunked)
+#music_copy = VolumeChange(music_copy,-3.0)
 # music_copy = music_copy[512:]
 sine_copy = CombineChunks(sine_chunked)
 
-# pyplot.plot(music_raw)
-# pyplot.plot(music_copy)
-pyplot.plot(sine_full)
-pyplot.plot(sine_copy)
+pyplot.plot(music_raw)
+pyplot.plot(music_copy)
+#pyplot.plot(sine_full)
+#pyplot.plot(sine_copy)
+
 pyplot.show()
 
-# music_copy = music_copy*32767
-# music_copy = music_copy.astype('int16')
-# Numpy16BitIntToMonoWav44kHz("output.wav",music_copy)
+NumpyFloatToWav("output.wav",music_copy)
 print('wav created')
 
 sys.exit()

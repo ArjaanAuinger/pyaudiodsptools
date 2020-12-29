@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='pyaudiodsptools',
-    version='0.7.6',
+    version='0.7.7',
     description='Package for Audio Processing with Numpy',
     long_description=readme,
     author='Arjaan Auinger',
