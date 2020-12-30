@@ -21,6 +21,29 @@ Optimal operation with chunk_size=512
 
 
 class CreateEQ3BandFFT:
+    """Creating a 3Band FFT EQ audio-effect class/device.
+
+    Can be used to manipulate frequencies in your audio numpy-array.
+    Is the faster one, the slower, non FFT based one being CreateEQ3Band.
+    Is NOT overloaded with basic settings.
+    This class introduces latency equal to config.chunk_size.
+
+    Parameters
+    ----------
+    lowshelf_frequency : int or float
+        Sets the frequency of the lowshelf-band in Hertz.
+    lowshelf_db : int or float
+        Increase or decrease the lows in decibel.
+    midband_frequency : int or float
+        Sets the frequency of the mid-band in Hertz. Has a fixed Q.
+    midband_db : int or float
+        Increase or decrease the selected mids in decibel.
+    highshelf_frequency : int or float
+        Sets the frequency of the highshelf-band in Hertz.
+    highshelf_db : int or float
+        Increase or decrease the highs in decibel.
+
+    """
     def __init__(self,lowshelf_frequency,lowshelf_db,midband_frequency,midband_db,highshelf_frequency,highshelf_db):
         #Basic
         #chunk_size = chunk_size
@@ -131,6 +154,19 @@ class CreateEQ3BandFFT:
 
 
     def apply(self, float32_array_input):
+        """Applying the 3 Band FFT EQ to a numpy-array.
+
+        Parameters
+        ----------
+        float32_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The processed array, should be the exact same size as the input array
+
+        """
         #Loading new chunk and replacing old ones
         self.float32_array_input_3 = self.float32_array_input_2
         self.float32_array_input_2 = self.float32_array_input_1

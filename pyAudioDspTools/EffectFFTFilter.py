@@ -51,7 +51,7 @@ class CreateHighCutFilter:
 
         Parameters
         ----------
-        float_array_input : float
+        float32_array_input : float
             The array, which the effect should be applied on.
 
         Returns
@@ -127,7 +127,7 @@ class CreateLowCutFilter:
 
         Parameters
         ----------
-        float_array_input : float
+        float32_array_input : float
             The array, which the effect should be applied on.
 
         Returns

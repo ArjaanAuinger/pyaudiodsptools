@@ -3,7 +3,7 @@ import numpy
 class CreateSoftClipper:
     """Creating a limiter-kind audio-effect class/device
 
-    Is a wave-shaper and messes with dynamic range, but doesn't introduce latency.
+    Its a wave-shaper and messes with dynamic range, but doesn't introduce latency.
 
     Parameters
     ----------

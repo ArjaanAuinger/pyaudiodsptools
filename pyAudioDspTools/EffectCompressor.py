@@ -40,7 +40,7 @@ class CreateCompressor:
 
 
     def apply(self,int_array_input):
-        """Applying the Gate to a numpy-array
+        """Applying the Gate to a numpy-array.
 
         Parameters
         ----------

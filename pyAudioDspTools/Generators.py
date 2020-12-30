@@ -3,12 +3,50 @@ from .config import chunk_size, sampling_rate
 
 
 def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=sampling_rate):
+    """Generates a sine wave with selected properties.
+
+    Parameters
+    ----------
+    sin_frequency : int
+        The frequency of the sine wave.
+    sin_length_in_samples : int
+        The lenght of the sine wave in samples. Is your sin_sample_rate is 44100 and your sin_length_in_samples is set to
+        44100 your sine wave signal will be exactly 1 second long for example
+    sin_sample_rate : int
+        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        to change your sampling rate globally to 48000 hertz for example.
+
+    Returns
+    -------
+    numpy array
+        The created array
+
+    """
     sin_time_array = numpy.arange(sin_length_in_samples)
     sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency * sin_time_array / sin_sample_rate))
     return sin_amplitude_array
 
 
 def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_rate=sampling_rate):
+    """Generates a square wave with selected properties.
+
+    Parameters
+    ----------
+    square_frequency : int
+        The frequency of the sine wave.
+    square_length_in_samples : int
+        The lenght of the square wave in samples. Is your square_sample_rate is 44100 and your square_length_in_samples
+        is set to 44100 your square wave signal will be exactly 1 second long for example
+    square_sample_rate : int
+        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        to change your sampling rate globally to 48000 hertz for example.
+
+    Returns
+    -------
+    numpy array
+        The created array
+
+    """
     square_time_array = numpy.arange(square_length_in_samples)
     square_amplitude_array = numpy.float32(
         numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
@@ -17,6 +55,23 @@ def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_r
 
 
 def CreateWhitenoise(noise_length_in_samples, sample_rate=sampling_rate):
+    """Generates noise with selected properties.
+
+    Parameters
+    ----------
+    noise_length_in_samples : int
+        The lenght of the sine wave in samples. Is your square_sample_rate is 44100 and your square_length_in_samples
+        is set to 44100 your noise signal will be exactly 1 second long for example
+    square_sample_rate : int
+        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        to change your sampling rate globally to 48000 hertz for example.
+
+    Returns
+    -------
+    numpy array
+        The created array
+
+    """
     whitenoise_time_array = numpy.arange(noise_length_in_samples)
     freqs = numpy.abs(numpy.fft.fftfreq(noise_length_in_samples, 1 / sample_rate))
     f = numpy.zeros(noise_length_in_samples)

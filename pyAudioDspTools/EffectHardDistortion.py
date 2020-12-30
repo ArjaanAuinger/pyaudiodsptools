@@ -2,10 +2,32 @@ import numpy
 import copy
 
 class CreateHardDistortion():
+    """Creating a distortion audio-effect class/device.
+
+    Its a wave-shaper and messes with dynamic range, but doesn't introduce latency.
+
+    Parameters
+    ----------
+    None : None
+
+    """
     def __init__(self):
         self.linear_limit = 0.8
 
     def apply(self,float_array_input):
+        """Applying the distortion to a numpy-array.
+
+        Parameters
+        ----------
+        float_array_input : float
+            The array, which the effect should be applied on.
+
+        Returns
+        -------
+        float
+            The processed array, should be the exact same size as the input array
+
+        """
         hard_limit = 1.0
         linear_limit = 0.8
         clip_limit = linear_limit + float(numpy.pi / 2 * (hard_limit - linear_limit))
