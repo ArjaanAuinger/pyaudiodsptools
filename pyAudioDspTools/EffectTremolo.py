@@ -43,7 +43,7 @@ class CreateTremolo:
             self.sin_lfo_copy = numpy.append(self.sin_lfo_copy,self.sin_lfo)
         self.sin_lfo_chunk = self.sin_lfo_copy[:current_input_lenght]
         self.sin_lfo_copy = self.sin_lfo_copy[-(len(self.sin_lfo_copy)-current_input_lenght):]
-        float_array_output = numpy.multiply(float_array_input, self.sin_lfo_chunk, dtype='float32', casting='unsafe')
+        float_array_output = numpy.multiply(float_array_input, self.sin_lfo_chunk, dtype='float32', casting='safe')
         return float_array_output
 
     def reset(self):

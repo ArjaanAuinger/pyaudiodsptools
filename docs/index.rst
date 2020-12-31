@@ -3,10 +3,17 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pyAudioDspTools
-===========================================
+.. image:: ../Logo.png
+   :width: 800
 
-pyAudioDspTools is a python 3 package for manipulating sound
+pyAudioDspTools is a python 3 package for manipulating audio by just using numpy. This can be from a .wav or as a stream
+via pyAudio for example. pyAudioDspTool's only requirement is Numpy. The package is only a few kilobytes in size and
+well documented. You can find the readthedocs here: link
+
+You can use pyAudioDspTools to start learning about audio dsp because all relevant operations are in plain sight,
+no C or C++ code will be called and nearly no blackboxing takes place. You can also easily modify all available audio
+effects and start writing your own, you only need to know python and numpy as well as audio dsp basics. As this package
+is released under the MIT licence, you can use it as you see fit.
 
 Quickstart
 ===========================================
@@ -33,18 +40,18 @@ pyAudioDspTools is device centered. Every sound effect processor is a class, ima
 
   image of pipeline here
 
-============
+========================
 Using pyAudioDspTools
-============
+========================
 Below you will find 2 simple examples of processing you data.Example 1 will read a .wav
 file, process the data and write it to a second .wav file. Example 2 will create a stream via the
 pyAudio package and process everything in realtime
 
-***************
+******************************
 Processing from a .wav file.
-***************
+******************************
 
-.. code-block:: text
+.. code-block:: python
 
   import pyAudioDspTools
 
@@ -63,10 +70,66 @@ Processing from a .wav file.
 
   # Merging the numpy-array back into a single big one and write it to a .wav file.
   merged_data = pyAudioDspTools.CombineChunks(split_data)
-  NumpyFloatToWav("some_path/output_audiofile.wav", merged_data)
+  pyAudioDspTools.NumpyFloatToWav("some_path/output_audiofile.wav", merged_data)
 
 
+***********************************
+Processing a live feed with pyaudio
+***********************************
 
+.. code-block:: python
+
+    # Example 2: Creating a live audio stream and processing it by running the data though a lowcut filter.
+    # Is MONO.
+    # Has to be manually terminated in the IDE.
+
+    import pyaudio
+    import pyAudioDspTools
+    import time
+    import numpy
+    import sys
+
+    pyAudioDspTools.sampling_rate = 44100
+    pyAudioDspTools.chunk_size = 512
+
+    filterdevice = pyAudioDspTools.CreateLowCutFilter(300)
+
+
+    # Instantiate PyAudio
+    pyaudioinstance = pyaudio.PyAudio()
+
+    # The callback function first reads the current input and converts it to a numpy array, filters it and returns it.
+    def callback(in_data, frame_count, time_info, status):
+       in_data = numpy.frombuffer(in_data, dtype=numpy.float32)
+       in_data = filterdevice.apply(in_data)
+       #print(numpydata)
+       return (in_data, pyaudio.paContinue)
+
+
+    # The stream class of pyaudio. Setting all the variables, pretty self explanatory.
+    stream = pyaudioinstance.open(format=pyaudio.paFloat32,
+                   channels=1,
+                   rate=pyAudioDspTools.sampling_rate,
+                   input = True,
+                   output = True,
+                   frames_per_buffer = pyAudioDspTools.chunk_size,
+                   stream_callback = callback)
+
+    # start the stream
+    stream.start_stream()
+
+    # wait
+    while stream.is_active():
+       time.sleep(5)
+       print("Cpu load:", stream.get_cpu_load())
+
+    # stop stream
+    stream.stop_stream()
+    stream.close()
+
+    # close PyAudio
+    pyaudioinstance.terminate()
+    sys.exit()
 
 Indices and tables
 ==================
