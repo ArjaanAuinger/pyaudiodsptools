@@ -131,8 +131,6 @@ Processing a live feed with pyaudio
     pyaudioinstance.terminate()
     sys.exit()
 
-* :ref:`modindex`
-==================
 
 Indices and tables
 ==================
