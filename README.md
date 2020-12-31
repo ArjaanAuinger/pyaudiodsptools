@@ -1,4 +1,4 @@
-<img src="https://raw.githubusercontent.com/ArjaanAuinger/pyaudiodsptools/master/Logo.png?token=ABCXOYG7HP6NFYXGLIRPGQ275XZYI" alt="pyAudioDspTools Logo" width="800" height="300" />
+<img src="https://raw.githubusercontent.com/ArjaanAuinger/pyaudiodsptools/master/Logo.png?token=ABCXOYG7HP6NFYXGLIRPGQ275XZYI" alt="pyAudioDspTools_Logo" width="800" height="300"/>
 
 pyAudioDspTools is a python 3 package for manipulating audio by just using numpy. This can be from a .wav or as a stream via pyAudio for example. pyAudioDspTool's only requirement is Numpy. The package is only a few kilobytes in size and well documented. You can find the readthedocs here: link
 
