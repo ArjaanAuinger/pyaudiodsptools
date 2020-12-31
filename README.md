@@ -1,3 +1,5 @@
+![alt text](https://raw.githubusercontent.com/ArjaanAuinger/pyaudiodsptools/master/Logo.png?token=ABCXOYG7HP6NFYXGLIRPGQ275XZYI?raw=true)
+
 # pyAudioDspTools
 
 
