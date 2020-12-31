@@ -3,6 +3,11 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
+pyAudioDspTools
+===========================================
+
+pyAudioDspTools is a python 3 package for manipulating sound
+
 Quickstart
 ===========================================
 .. toctree::
@@ -43,16 +48,20 @@ Processing from a .wav file.
 
   import pyAudioDspTools
 
+  # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
   full_data = pyAudioDspTools.MonoWavToNumpyFloat("some_path/your_audiofile.wav")
   split_data = pyAudioDspTools.MakeChunks(full_data)
 
+  # Creating the class/device, which is a lowcut filter
   filter_device = pyAudioDspTools.CreateLowCutFilter(800)
 
+  # Setting a counter and process the chunks via filter_device.apply
   counter = 0
   for counter in range(len(split_data)):
       split_data[counter] = filter_device.apply(split_data[counter])
       counter += 1
 
+  # Merging the numpy-array back into a single big one and write it to a .wav file.
   merged_data = pyAudioDspTools.CombineChunks(split_data)
   NumpyFloatToWav("some_path/output_audiofile.wav", merged_data)
 
