@@ -1,5 +1,4 @@
-![alt text](https://raw.githubusercontent.com/ArjaanAuinger/pyaudiodsptools/master/Logo.png?token=ABCXOYG7HP6NFYXGLIRPGQ275XZYI?raw=true)
-
+<img src="https://raw.githubusercontent.com/ArjaanAuinger/pyaudiodsptools/master/Logo.png?token=ABCXOYG7HP6NFYXGLIRPGQ275XZYI" alt="C++ Logo" width="800" height="300" />
 # pyAudioDspTools
 
 
