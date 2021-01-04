@@ -136,9 +136,9 @@ Processing a live feed with pyaudio
 Submodules
 ===========================================
 
-****************************************
+
 pyAudioDspTools.EffectCompressor module
-****************************************
+----------------------------------
 
 .. automodule:: pyAudioDspTools.EffectCompressor
    :members:
