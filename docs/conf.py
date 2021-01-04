@@ -11,7 +11,7 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 autodoc_mock_imports = ['sphinx_bootstrap_theme']
-import sphinx_bootstrap_theme
+#import sphinx_bootstrap_theme
 
 import os
 import sys
