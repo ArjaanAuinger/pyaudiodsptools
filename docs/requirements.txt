@@ -20,7 +20,6 @@ Pillow==8.0.1
 pkginfo==1.6.1
 pockets==0.9.1
 PyAudio==0.2.11
-pyaudiodsptools==0.7.7
 Pygments==2.7.3
 pyparsing==2.4.7
 python-dateutil==2.8.1
