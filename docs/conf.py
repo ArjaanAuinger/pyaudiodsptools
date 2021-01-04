@@ -12,7 +12,7 @@
 #
 #autodoc_mock_imports = ['sphinx_bootstrap_theme']
 
-#import sphinx_bootstrap_theme
+import sphinx_bootstrap_theme
 
 import os
 import sys
@@ -52,19 +52,19 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 
-html_theme = 'classic'
+#html_theme = 'classic'
 
-colour = "Ivory"
+#colour = "Ivory"
 
-html_theme_options = {
-    "bgcolor": colour,
-    "relbarbgcolor": colour,
-    "sidebarbgcolor": "DimGrey",
-    "sidebarlinkcolor": "Cornsilk"
-}
+#html_theme_options = {
+ #   "bgcolor": colour,
+ #   "relbarbgcolor": colour,
+  #  "sidebarbgcolor": "DimGrey",
+  #  "sidebarlinkcolor": "Cornsilk"
+#}
 
-#html_theme = 'sphinx_rtd_theme'
-#html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+html_theme = 'sphinx_rtd_theme'
+html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

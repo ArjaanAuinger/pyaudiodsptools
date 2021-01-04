@@ -241,20 +241,6 @@ pyAudioDspTools.config module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: pyAudioDspTools
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Contents:
-
-   source/modules
-
 Indices and tables
 ==================
 
