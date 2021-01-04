@@ -52,7 +52,16 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 
-html_theme = 'alabaster'
+html_theme = 'classic'
+
+colour = "Ivory"
+
+html_theme_options = {
+    "bgcolor": colour,
+    "relbarbgcolor": colour,
+    "sidebarbgcolor": "DimGrey",
+    "sidebarlinkcolor": "Cornsilk"
+}
 
 #html_theme = 'sphinx_rtd_theme'
 #html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
