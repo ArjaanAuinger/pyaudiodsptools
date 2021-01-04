@@ -11,7 +11,8 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 #autodoc_mock_imports = ['sphinx_bootstrap_theme']
-import sphinx_bootstrap_theme
+
+#import sphinx_bootstrap_theme
 
 import os
 import sys
@@ -51,10 +52,10 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # a list of builtin themes.
 #
 
-#html_theme = 'alabaster'
+html_theme = 'insegel'
 
-html_theme = 'sphinx_rtd_theme'
-html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
+#html_theme = 'sphinx_rtd_theme'
+#html_theme_path = sphinx_bootstrap_theme.get_html_theme_path()
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
