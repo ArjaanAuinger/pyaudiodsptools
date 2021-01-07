@@ -3,20 +3,21 @@
 from setuptools import setup, find_packages
 
 
-with open('README.md') as f:
+with open('Twine_Readme.md') as f:
     readme = f.read()
 
 with open('LICENSE') as f:
     license = f.read()
 
 setup(
-    name='pyaudiodsptools',
-    version='0.7.7',
-    description='Package for Audio Processing with Numpy',
+    name='pyAudioDspTools',
+    version='0.7.9',
+    description='Package for audio processing with Numpy',
     long_description=readme,
     author='Arjaan Auinger',
     author_email='arjaan.auinger@gmail.com',
     url='https://github.com/ArjaanAuinger/pyaudiodsptools',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs'))
+    packages=find_packages(exclude=('tests', 'docs')),
+    python_requires='>=3.6'
 )
