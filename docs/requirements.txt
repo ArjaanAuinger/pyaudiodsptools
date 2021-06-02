@@ -43,6 +43,6 @@ sphinxcontrib-serializinghtml==1.1.4
 tqdm==4.54.1
 twine==3.2.0
 typing-extensions==3.7.4.3
-urllib3==1.26.2
+urllib3==1.26.5
 webencodings==0.5.1
 zipp==3.4.0
