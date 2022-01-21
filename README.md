@@ -14,7 +14,7 @@ is released under the MIT licence, you can use it as you see fit. If you want to
 
 ## Prerequesites
   - Python 3.6 or greater
-  - Numpy Packages (find here: https://numpy.org/)
+  - Numpy (find here: https://numpy.org/)
 
 ## Installation with pip
 To install pyAudioDspTools simply open a terminal in your venv and use pip:
