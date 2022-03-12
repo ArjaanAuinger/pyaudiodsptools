@@ -16,7 +16,7 @@ MarkupSafe==1.1.1
 matplotlib==3.3.3
 numpy==1.19.4
 packaging==20.8
-Pillow==8.0.1
+Pillow==9.0.1
 pkginfo==1.6.1
 pockets==0.9.1
 Pygments==2.7.3
