@@ -129,3 +129,6 @@ dmypy.json
 *.wav
 *.wav.asd
 /Scripts/
+
+# pycharm folder
+.idea/
