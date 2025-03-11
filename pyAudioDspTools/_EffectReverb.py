@@ -5,7 +5,7 @@ from .EffectFFTFilter import CreateLowCutFilter, CreateHighCutFilter
 class CreateReverb:
     def __init__(self,time_in_ms=1500):
         self.reverb_time = time_in_ms
-        self.reverb_time_in_samples = numpy.int((time_in_ms/1000)*sampling_rate)
+        self.reverb_time_in_samples = int((time_in_ms/1000)*sampling_rate)
         self.early_reflection_delay_1 = self.__CreateReverbDelayLine(self.reverb_time_in_samples,27,100,0,5000,False,True,True)
         self.early_reflection_delay_2 = self.__CreateReverbDelayLine(self.reverb_time_in_samples,127, 50, 0, 150,False,True,True)
         #self.early_reflection_delay_3 = self.__CreateReverbDelayLine(413, 1, 0, 600, False, True, True)
@@ -26,7 +26,7 @@ class CreateReverb:
     class __CreateReverbDelayLine:
         def __init__(self, reverb_time_in_samples,time_in_ms=500, feedback_loops=2, lowcut_filter_frequency=40, highcut_filter_frequency=12000,
                      use_lowcut_filter=False, use_highcut_filter=False, wet=False):
-            self.time_in_samples = numpy.int(reverb_time_in_samples//feedback_loops)#numpy.int(time_in_ms * (sampling_rate / 1000))
+            self.time_in_samples = int(reverb_time_in_samples//feedback_loops)#int(time_in_ms * (sampling_rate / 1000))
             print(self.time_in_samples)
             self.wet = wet
             self.max_samples = reverb_time_in_samples #self.time_in_samples * (feedback_loops + 2)
