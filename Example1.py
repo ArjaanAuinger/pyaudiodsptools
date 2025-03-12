@@ -1,10 +1,9 @@
 import pyAudioDspTools
 
-pyAudioDspTools.sampling_rate = 44100
-pyAudioDspTools.chunk_size = 512
+pyAudioDspTools.config.initialize(44100, 4096)
 
 # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
-full_data = pyAudioDspTools.MonoWavToNumpyFloat("pyAudioDspTools/testmusic_mono.wav")
+full_data = pyAudioDspTools.Utility.MonoWavToNumpyFloat("TestFile16BitMono.wav")
 split_data = pyAudioDspTools.MakeChunks(full_data)
 
 

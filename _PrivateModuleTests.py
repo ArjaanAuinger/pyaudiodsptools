@@ -9,7 +9,7 @@ Then create a scratch and run this script.
 
 import matplotlib.pyplot as pyplot
 
-from pyAudioDspTools.config import chunk_size, sampling_rate
+from pyAudioDspTools.config import config.chunk_size, config.sampling_rate
 
 import os
 import sys
@@ -88,8 +88,8 @@ print('done...')
 print('')
 
 print('####config.py settings####')
-print('Sample Rate is: ', sampling_rate, 'Hz')
-print('Chunk Size / Buffer Size is: ', chunk_size, 'samples')
+print('Sample Rate is: ', config.sampling_rate, 'Hz')
+print('Chunk Size / Buffer Size is: ', config.chunk_size, 'samples')
 print('')
 
 

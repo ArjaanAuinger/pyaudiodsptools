@@ -1,6 +1,6 @@
 import numpy
 
-from .config import chunk_size, sampling_rate
+from . import config
 from .Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
 from .Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBVTo16Bit
 from .Utility import Convert16BitTodBV, Dither16BitTo8Bit, Dither32BitIntTo16BitInt, MonoWavToNumpyFloat, InfodBV

@@ -1,7 +1,7 @@
 import numpy
 import copy
 
-from .config import chunk_size, sampling_rate
+from . import config
 
 class CreateTremolo:
     """Creating a tremolo audio-effect class/device
@@ -17,7 +17,7 @@ class CreateTremolo:
 
     """
     def __init__(self,tremolo_depth=0.4,lfo_in_hertz=4.5):
-        self.sin_sample_rate = sampling_rate
+        self.sin_sample_rate = config.sampling_rate
         self.sin_time_array = numpy.arange(numpy.float32(self.sin_sample_rate/lfo_in_hertz))
         self.sin_lfo = numpy.float32((((numpy.sin(2 * numpy.pi * lfo_in_hertz*self.sin_time_array/self.sin_sample_rate)
                                         /2)+0.5)*tremolo_depth)+(1-tremolo_depth))

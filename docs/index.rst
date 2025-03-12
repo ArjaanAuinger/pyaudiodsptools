@@ -89,8 +89,8 @@ Processing a live feed with pyaudio
     import numpy
     import sys
 
-    pyAudioDspTools.sampling_rate = 44100
-    pyAudioDspTools.chunk_size = 512
+    pyAudioDspTools.config.sampling_rate = 44100
+    pyAudioDspTools.config.chunk_size = 512
 
     filterdevice = pyAudioDspTools.CreateLowCutFilter(300)
 
@@ -109,10 +109,10 @@ Processing a live feed with pyaudio
     # The stream class of pyaudio. Setting all the variables, pretty self explanatory.
     stream = pyaudioinstance.open(format=pyaudio.paFloat32,
                    channels=1,
-                   rate=pyAudioDspTools.sampling_rate,
+                   rate=pyAudioDspTools.config.sampling_rate,
                    input = True,
                    output = True,
-                   frames_per_buffer = pyAudioDspTools.chunk_size,
+                   frames_per_buffer = pyAudioDspTools.config.chunk_size,
                    stream_callback = callback)
 
     # start the stream

@@ -4,8 +4,7 @@ import wave
 import math
 import struct
 import copy
-from .config import chunk_size, sampling_rate
-
+from . import config
 def MakeChunks(float32_array_input):
     """Converts a long numpy array in multiple small ones for processing
 
@@ -20,9 +19,9 @@ def MakeChunks(float32_array_input):
         The sliced arrays.
 
     """
-    number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/chunk_size))
+    number_of_chunks = math.ceil(numpy.float32(len(float32_array_input)/config.chunk_size))
     if len(float32_array_input) % number_of_chunks != 0:
-        samples_to_append = chunk_size - (len(float32_array_input) % chunk_size)
+        samples_to_append = config.chunk_size - (len(float32_array_input) % config.chunk_size)
         #print(number_of_chunks)
         float32_array_input = numpy.append(float32_array_input,numpy.zeros(samples_to_append,dtype="float32"))
     float32_chunked_array = numpy.split(float32_array_input, number_of_chunks)
@@ -238,79 +237,76 @@ def MonoWavToNumpyFloat(wav_file_path):
     audio_as_numpy_array = (audio_as_numpy_array.astype('float32')/32768)
     return audio_as_numpy_array
 
-def NumpyFloatToWav(filename, data):
-    """
-    Write a numpy array as a WAV file
+
+def StereoWavToNumpyFloat(wav_file_path):
+    """Imports a stereo .wav file as a numpy array.
+    All values will be scaled to be between -1.0 and 1.0 for further processing.
+
     Parameters
     ----------
-    filename : string or open file handle
-        Output wav file
-    rate : int
-        The sample rate (in samples/sec).
-    data : ndarray
-        A 1-D or 2-D numpy array of either integer or float data-type.
-    Notes
-    -----
-    * The file can be an open file or a filename.
-    * Writes a simple uncompressed WAV file.
-    * The bits-per-sample will be determined by the data-type.
-    * To write multiple-channels, use a 2-D array of shape
-      (Nsamples, Nchannels).
+    wav_file_path : string
+        Follows the normal python path rules.
+
+    Returns
+    -------
+    numpy array : float
+        The imported array with shape (n_samples, 2) for stereo files.
     """
-    if (data.dtype == 'float'):
-        data = data * 32767
-        data = data.astype('int16')
-    if hasattr(filename,'write'):
-        fid = filename
-    else:
-        fid = open(filename, 'wb')
+    with wave.open(wav_file_path, 'rb') as wav_file:
+        n_channels = wav_file.getnchannels()
+        if n_channels != 2:
+            raise ValueError("This function supports only stereo .wav files.")
 
-    try:
-        dkind = data.dtype.kind
-        if not (dkind == 'i' or dkind == 'f' or (dkind == 'u' and data.dtype.itemsize == 1)):
-            raise ValueError("Unsupported data type '%s'" % data.dtype)
+        samples = wav_file.getnframes()
+        audio = wav_file.readframes(samples)
 
-        fid.write(b'RIFF')
-        fid.write(b'\x00\x00\x00\x00')
-        fid.write(b'WAVE')
-        # fmt chunk
-        fid.write(b'fmt ')
-        if dkind == 'f':
-            comp = 3
-        else:
-            comp = 1
-        if data.ndim == 1:
-            noc = 1
-        else:
-            noc = data.shape[1]
-        bits = data.dtype.itemsize * 8
-        sbytes = sampling_rate*(bits // 8)*noc
-        ba = noc * (bits // 8)
-        fid.write(struct.pack('<ihHIIHH', 16, comp, noc, sampling_rate, sbytes, ba, bits))
-        # data chunk
-        fid.write(b'data')
-        fid.write(struct.pack('<i', data.nbytes))
-        if data.dtype.byteorder == '>' or (data.dtype.byteorder == '=' and sys.byteorder == 'big'):
-            data = data.byteswap()
-        _array_tofile(fid, data)
+        # Convert audio to numpy array
+        audio_as_numpy_array = numpy.frombuffer(audio, dtype=numpy.int16)
 
-        # Determine file size and place it in correct
-        #  position at start of the file.
-        size = fid.tell()
-        fid.seek(4)
-        fid.write(struct.pack('<i', size-8))
+        # Reshape for stereo audio
+        audio_as_numpy_array = audio_as_numpy_array.reshape(-1, 2)
 
-    finally:
-        if not hasattr(filename,'write'):
-            fid.close()
-        else:
-            fid.seek(0)
-    return
+        # Normalize the audio
+        audio_as_numpy_array = audio_as_numpy_array.astype('float32') / 32768
 
-if sys.version_info[0] >= 3:
-    def _array_tofile(fid, data):
-        # ravel gives a c-contiguous buffer
-        fid.write(data.ravel().view('b').data)
-else:
-    def _array_tofile(fid, data):
-        fid.write(data.tostring())
+        # Split the audio into two separate arrays
+        left_channel = audio_as_numpy_array[:, 0]
+        right_channel = audio_as_numpy_array[:, 1]
+
+        return left_channel, right_channel
+
+def NumpyFloatToWav(wav_file_path, numpy_array):
+    """
+    Exports a numpy array as a .wav file.
+
+    Parameters
+    ----------
+    numpy_array : numpy array
+        The array containing audio data. Must be of shape (n_samples,) for mono
+        or (n_samples, 2) for stereo.
+
+    wav_file_path : string
+        The path where the .wav file will be saved.
+
+    sample_rate : int, optional
+        The sample rate of the audio. Default is 44100 Hz.
+    """
+    # Check if stereo and reshape if necessary ro (n_samples, 2) instead of (2, n_samples) in case array is [left_channel, right_channel]
+    if numpy_array.ndim == 2 and numpy_array.shape[0] == 2:
+        numpy_array = numpy_array.T  # Transpose to (n_samples, 2)
+
+    # Determine number of channels
+    n_channels = 1 if numpy_array.ndim == 1 else numpy_array.shape[1]
+
+    # Ensure the audio data is in the range [-1.0, 1.0]
+    if not numpy.any((numpy_array >= -1) & (numpy_array <= 1)):
+        raise ValueError("Array values should be in the range [-1.0, 1.0]")
+
+    # Convert float array to int16
+    int_data = (numpy_array * 32767).astype('int16')
+
+    with wave.open(wav_file_path, 'wb') as wav_file:
+        wav_file.setnchannels(n_channels)
+        wav_file.setsampwidth(2)  # 2 bytes for 'int16'
+        wav_file.setframerate(config.sampling_rate)
+        wav_file.writeframes(int_data.tobytes())

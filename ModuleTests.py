@@ -9,7 +9,7 @@ Then create a scratch and run this script.
 
 #import matplotlib.pyplot as pyplot
 
-from pyAudioDspTools.config import chunk_size, sampling_rate
+import pyAudioDspTools
 
 import os
 import sys
@@ -31,6 +31,9 @@ import struct
 # print(numpy.iinfo('int8').max)# 127
 # print(numpy.iinfo('int8').min)# -128
 
+pyAudioDspTools.config.initialize(44100, 512)
+
+from pyAudioDspTools import config
 
 from pyAudioDspTools.Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise
 from pyAudioDspTools.Utility import MakeChunks, CombineChunks, MixSignals, ConvertdBVTo16Bit
@@ -81,8 +84,8 @@ print('done...')
 print('')
 
 print('####config.py settings####')
-print('Sample Rate is: ', sampling_rate, 'Hz')
-print('Chunk Size / Buffer Size is: ', chunk_size, 'samples')
+print('Sample Rate is: ', config.sampling_rate, 'Hz')
+print('Chunk Size / Buffer Size is: ', config.chunk_size, 'samples')
 print('')
 
 

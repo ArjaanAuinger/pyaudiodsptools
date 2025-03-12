@@ -1,4 +1,4 @@
-from .config import chunk_size, sampling_rate
+from . import config
 import numpy
 
 
@@ -7,7 +7,7 @@ class CreateHighCutFilter:
 
     Cuts the upper frequencies of a signal.
     Is overloaded with basic settings.
-    This class introduces latency equal to chunk_size.
+    This class introduces latency equal to config.chunk_size.
 
     Parameters
     ----------
@@ -16,13 +16,13 @@ class CreateHighCutFilter:
 
     """
     def __init__(self, cutoff_frequency=8000):
-        #self.chunk_size = chunk_size
-        self.fS = sampling_rate  # Sampling rate.
+        #self.config.chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
-        self.filter_length = (chunk_size // 2) - 1  # Filter length, must be odd.
+        self.filter_length = (config.chunk_size // 2) - 1  # Filter length, must be odd.
 
-        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
-        self.array_slice_value_end = chunk_size - (self.filter_length // 2)
+        self.array_slice_value_start = config.chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end = config.chunk_size - (self.filter_length // 2)
 
         # Compute sinc filter.
         self.sinc_filter = numpy.sinc(
@@ -36,13 +36,13 @@ class CreateHighCutFilter:
         # Normalize to get unity gain.
         self.sinc_filter /= numpy.sum(self.sinc_filter)
 
-        self.filtered_signal = numpy.zeros(chunk_size * 3)
-        self.float32_array_input_1 = numpy.zeros(chunk_size)
-        self.float32_array_input_2 = numpy.zeros(chunk_size)
-        self.float32_array_input_3 = numpy.zeros(chunk_size)
+        self.filtered_signal = numpy.zeros(config.chunk_size * 3)
+        self.float32_array_input_1 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_2 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_3 = numpy.zeros(config.chunk_size)
 
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
-        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(((len(self.sinc_filter) * 2) - 3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 
@@ -80,7 +80,7 @@ class CreateLowCutFilter:
 
     Cuts the lower frequencies of a signal.
     Is overloaded with basic settings.
-    This class introduces latency equal to chunk_size.
+    This class introduces latency equal to config.chunk_size.
 
     Parameters
     ----------
@@ -89,13 +89,13 @@ class CreateLowCutFilter:
 
     """
     def __init__(self, cutoff_frequency=160):
-        #self.chunk_size = chunk_size
-        self.fS = sampling_rate  # Sampling rate.
+        #self.config.chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
         self.fH = cutoff_frequency  # Cutoff frequency.
-        self.filter_length = (chunk_size // 2) - 1  # Filter length, must be odd.
+        self.filter_length = (config.chunk_size // 2) - 1  # Filter length, must be odd.
 
-        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
-        self.array_slice_value_end = chunk_size - (self.filter_length // 2)
+        self.array_slice_value_start = config.chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end = config.chunk_size - (self.filter_length // 2)
 
         # Compute sinc filter.
         self.sinc_filter = numpy.sinc(
@@ -112,13 +112,13 @@ class CreateLowCutFilter:
         self.sinc_filter = -self.sinc_filter
         self.sinc_filter[(self.filter_length - 1) // 2] += 1
 
-        self.filtered_signal = numpy.zeros(chunk_size * 3)
-        self.float32_array_input_1 = numpy.zeros(chunk_size)
-        self.float32_array_input_2 = numpy.zeros(chunk_size)
-        self.float32_array_input_3 = numpy.zeros(chunk_size)
+        self.filtered_signal = numpy.zeros(config.chunk_size * 3)
+        self.float32_array_input_1 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_2 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_3 = numpy.zeros(config.chunk_size)
 
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
-        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter = numpy.append(self.sinc_filter, numpy.zeros(((len(self.sinc_filter) * 2) - 3)))
         self.sinc_filter = numpy.fft.fft(self.sinc_filter)
 

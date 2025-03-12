@@ -1,6 +1,6 @@
 import numpy
 import math
-from .config import chunk_size, sampling_rate
+from . import config
 from .EffectFFTFilter import CreateLowCutFilter, CreateHighCutFilter
 
 class CreateDelay:
@@ -28,7 +28,7 @@ class CreateDelay:
         Used for parallel processing.
     """
     def __init__(self,time_in_ms=500,feedback_loops=2,lowcut_filter_frequency=40,highcut_filter_frequency=12000,use_lowcut_filter=False,use_highcut_filter=False,wet=False):
-        self.time_in_samples = int(time_in_ms*(sampling_rate/1000))
+        self.time_in_samples = int(time_in_ms*(config.sampling_rate/1000))
         self.wet = wet
         self.max_samples = self.time_in_samples*(feedback_loops+2)
         self.delay_buffer = numpy.zeros(int(self.max_samples), dtype="float32")

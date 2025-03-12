@@ -1,8 +1,8 @@
 import numpy
-from .config import chunk_size, sampling_rate
+from . import config
 
 
-def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=sampling_rate):
+def CreateSinewave(sin_frequency, sin_length_in_samples):
     """Generates a sine wave with selected properties.
 
     Parameters
@@ -13,7 +13,7 @@ def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=samplin
         The lenght of the sine wave in samples. Is your sin_sample_rate is 44100 and your sin_length_in_samples is set to
         44100 your sine wave signal will be exactly 1 second long for example
     sin_sample_rate : int
-        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        Is set to config.sampling_rate from your config.py by default. Use pyAudioDspTools.config.sampling_rate=48000 in your script
         to change your sampling rate globally to 48000 hertz for example.
 
     Returns
@@ -23,11 +23,11 @@ def CreateSinewave(sin_frequency, sin_length_in_samples, sin_sample_rate=samplin
 
     """
     sin_time_array = numpy.arange(sin_length_in_samples)
-    sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency * sin_time_array / sin_sample_rate))
+    sin_amplitude_array = numpy.float32(numpy.sin(2 * numpy.pi * sin_frequency * sin_time_array / config.sampling_rate))
     return sin_amplitude_array
 
 
-def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_rate=sampling_rate):
+def CreateSquarewave(square_frequency, square_length_in_samples):
     """Generates a square wave with selected properties.
 
     Parameters
@@ -38,7 +38,7 @@ def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_r
         The lenght of the square wave in samples. Is your square_sample_rate is 44100 and your square_length_in_samples
         is set to 44100 your square wave signal will be exactly 1 second long for example
     square_sample_rate : int
-        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        Is set to config.sampling_rate from your config.py by default. Use pyAudioDspTools.config.sampling_rate=48000 in your script
         to change your sampling rate globally to 48000 hertz for example.
 
     Returns
@@ -49,12 +49,12 @@ def CreateSquarewave(square_frequency, square_length_in_samples, square_sample_r
     """
     square_time_array = numpy.arange(square_length_in_samples)
     square_amplitude_array = numpy.float32(
-        numpy.sin(2 * numpy.pi * square_frequency * square_time_array / square_sample_rate))
+        numpy.sin(2 * numpy.pi * square_frequency * square_time_array / config.sampling_rate))
     square_amplitude_array = numpy.where(square_amplitude_array > 0, 1.0, -1.0)
     return square_amplitude_array
 
 
-def CreateWhitenoise(noise_length_in_samples, sample_rate=sampling_rate):
+def CreateWhitenoise(noise_length_in_samples):
     """Generates noise with selected properties.
 
     Parameters
@@ -63,7 +63,7 @@ def CreateWhitenoise(noise_length_in_samples, sample_rate=sampling_rate):
         The lenght of the sine wave in samples. Is your square_sample_rate is 44100 and your square_length_in_samples
         is set to 44100 your noise signal will be exactly 1 second long for example
     square_sample_rate : int
-        Is set to sampling_rate from your config.py by default. Use pyAudioDspTools.sampling_rate=48000 in your script
+        Is set to config.sampling_rate from your config.py by default. Use pyAudioDspTools.config.sampling_rate=48000 in your script
         to change your sampling rate globally to 48000 hertz for example.
 
     Returns
@@ -73,7 +73,7 @@ def CreateWhitenoise(noise_length_in_samples, sample_rate=sampling_rate):
 
     """
     whitenoise_time_array = numpy.arange(noise_length_in_samples)
-    freqs = numpy.abs(numpy.fft.fftfreq(noise_length_in_samples, 1 / sample_rate))
+    freqs = numpy.abs(numpy.fft.fftfreq(noise_length_in_samples, 1 / config.sampling_rate))
     f = numpy.zeros(noise_length_in_samples)
     idx = numpy.where(numpy.logical_and(freqs >= 20, freqs <= 20000))[0]
     f[idx] = 1

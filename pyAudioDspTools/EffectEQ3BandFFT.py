@@ -1,5 +1,5 @@
 import numpy
-from .config import  chunk_size, sampling_rate
+from . import config
 #import matplotlib.pyplot as pyplot
 
 
@@ -15,8 +15,8 @@ applyfilter
     Applies the filter to a 44100Hz/32 bit float signal of your choice.
     Should operate with values between -1.0 and 1.0
     
-This class introduces latency equal to the value of chunk_size. 
-Optimal operation with chunk_size=512
+This class introduces latency equal to the value of config.chunk_size. 
+Optimal operation with config.chunk_size=512
 ###########################################################################################"""
 
 
@@ -26,7 +26,7 @@ class CreateEQ3BandFFT:
     Can be used to manipulate frequencies in your audio numpy-array.
     Is the faster one, the slower, non FFT based one being CreateEQ3Band.
     Is NOT overloaded with basic settings.
-    This class introduces latency equal to config.chunk_size.
+    This class introduces latency equal to config.config.chunk_size.
 
     Parameters
     ----------
@@ -46,8 +46,8 @@ class CreateEQ3BandFFT:
     """
     def __init__(self,lowshelf_frequency,lowshelf_db,midband_frequency,midband_db,highshelf_frequency,highshelf_db):
         #Basic
-        #chunk_size = chunk_size
-        self.fS = sampling_rate  # Sampling rate.
+        #config.chunk_size = config.chunk_size
+        self.fS = config.sampling_rate  # Sampling rate.
 
         #Highshelf Properties
         self.fH_highshelf = highshelf_frequency
@@ -62,9 +62,9 @@ class CreateEQ3BandFFT:
         self.midband_db = midband_db
 
         #Setting Kaiser-Windows properties
-        self.filter_length = (chunk_size//2)-1 # Filter length, must be odd.
-        self.array_slice_value_start = chunk_size + (self.filter_length // 2)
-        self.array_slice_value_end =  chunk_size - (self.filter_length // 2)
+        self.filter_length = (config.chunk_size//2)-1 # Filter length, must be odd.
+        self.array_slice_value_start = config.chunk_size + (self.filter_length // 2)
+        self.array_slice_value_end =  config.chunk_size - (self.filter_length // 2)
 
 
         ################ Create Lowcut (Finally becomes Highshelf) Sinc Filter and FFT ##################
@@ -85,7 +85,7 @@ class CreateEQ3BandFFT:
 
         #Zero Padding the Sinc Filter to the length of the input array for easier processing
         #You don't need to use numpy.convolve when input-array and sinc-filter array are the same lenght, just multiply
-        self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter_highshelf = numpy.append(self.sinc_filter_highshelf, numpy.zeros(((len(self.sinc_filter_highshelf) * 2) - 3)))
         self.sinc_filter_highshelf = numpy.fft.fft(self.sinc_filter_highshelf)
 
@@ -102,7 +102,7 @@ class CreateEQ3BandFFT:
         self.sinc_filter_lowshelf /= numpy.sum(self.sinc_filter_lowshelf)
 
         #Zero Padding the Sinc Filter to the length of the input array
-        self.sinc_filter_lowshelf = numpy.append(self.sinc_filter_lowshelf, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_lowshelf = numpy.append(self.sinc_filter_lowshelf, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter_lowshelf = numpy.append(self.sinc_filter_lowshelf, numpy.zeros(((len(self.sinc_filter_lowshelf) * 2) - 3)))
         self.sinc_filter_lowshelf = numpy.fft.fft(self.sinc_filter_lowshelf)
 
@@ -133,23 +133,23 @@ class CreateEQ3BandFFT:
         self.sinc_filter_mid_highpass[(self.filter_length - 1) // 2] += 1
 
         #Zero Padding the Sinc Filter to the length of the input array
-        self.sinc_filter_mid_lowpass = numpy.append(self.sinc_filter_mid_lowpass, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_mid_lowpass = numpy.append(self.sinc_filter_mid_lowpass, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter_mid_lowpass = numpy.append(self.sinc_filter_mid_lowpass, numpy.zeros(((len(self.sinc_filter_mid_lowpass) * 2) - 3)))
         self.sinc_filter_mid_lowpass = numpy.fft.fft(self.sinc_filter_mid_lowpass)
 
         #Zero Padding the Sinc Filter to the length of the input array
-        self.sinc_filter_mid_highpass = numpy.append(self.sinc_filter_mid_highpass, numpy.zeros(chunk_size - self.filter_length + 1))
+        self.sinc_filter_mid_highpass = numpy.append(self.sinc_filter_mid_highpass, numpy.zeros(config.chunk_size - self.filter_length + 1))
         self.sinc_filter_mid_highpass = numpy.append(self.sinc_filter_mid_highpass, numpy.zeros(((len(self.sinc_filter_mid_highpass) * 2) - 3)))
         self.sinc_filter_mid_highpass = numpy.fft.fft(self.sinc_filter_mid_highpass)
 
 
 
         #Initializing arrays
-        self.filtered_signal = numpy.zeros(chunk_size * 3)
-        self.original_signal = numpy.zeros(chunk_size * 3)
-        self.float32_array_input_1 = numpy.zeros(chunk_size)
-        self.float32_array_input_2 = numpy.zeros(chunk_size)
-        self.float32_array_input_3 = numpy.zeros(chunk_size)
+        self.filtered_signal = numpy.zeros(config.chunk_size * 3)
+        self.original_signal = numpy.zeros(config.chunk_size * 3)
+        self.float32_array_input_1 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_2 = numpy.zeros(config.chunk_size)
+        self.float32_array_input_3 = numpy.zeros(config.chunk_size)
         self.cut_size = numpy.int16((self.filter_length - 1) / 2)
 
 
