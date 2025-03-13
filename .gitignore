@@ -126,7 +126,6 @@ dmypy.json
 .pyre/
 
 # Audio Files
-*.wav
 *.wav.asd
 /Scripts/
 

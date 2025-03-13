@@ -44,12 +44,11 @@ pyAudio package and process everything in realtime
 ```python
 
     import pyAudioDspTools
-    
-    pyAudioDspTools.config.sampling_rate = 44100
-    pyAudioDspTools.config.chunk_size = 512
+
+    pyAudioDspTools.config.initialize(44100, 4096)
 
     # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
-    full_data = pyAudioDspTools.MonoWavToNumpyFloat("some_path/your_audiofile.wav")
+    full_data = pyAudioDspTools.Utility.MonoWavToNumpyFloat("TestFile16BitMono.wav")
     split_data = pyAudioDspTools.MakeChunks(full_data)
 
 
@@ -66,10 +65,47 @@ pyAudio package and process everything in realtime
 
     # Merging the numpy-array back into a single big one and write it to a .wav file.
     merged_data = pyAudioDspTools.CombineChunks(split_data)
-    pyAudioDspTools.NumpyFloatToWav("some_path/output_audiofile.wav", merged_data)
+    pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav", merged_data)
 ```
 
-### Example2.py : Processing a live feed with pyaudio
+
+### Example2.py : Stereo Processing from a .wav file.
+
+```python
+
+    import numpy
+    import pyAudioDspTools
+
+    pyAudioDspTools.config.initialize(44100, 4096)
+
+    # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
+    left_channel, right_channel = pyAudioDspTools.Utility.StereoWavToNumpyFloat("TestFile16BitStereo.wav")
+    split_data_left = pyAudioDspTools.MakeChunks(left_channel)
+    split_data_right = pyAudioDspTools.MakeChunks(right_channel)
+
+
+    # Creating the class/device, which is a lowcut filter
+    filter_device_left = pyAudioDspTools.CreateLowCutFilter(800)
+    filter_device_right = pyAudioDspTools.CreateLowCutFilter(800)
+
+
+    # Setting a counter and process the chunks via filter_device.apply
+    counter = 0
+    for counter in range(len(split_data_left)):
+        split_data_left[counter] = filter_device_left.apply(split_data_left[counter])
+        split_data_right[counter] = filter_device_right.apply(split_data_right[counter])
+        counter += 1
+
+
+    # Merging the numpy-array back into a single big one and write it to a .wav file.
+    merged_data_left = pyAudioDspTools.CombineChunks(split_data_left)
+    merged_data_right = pyAudioDspTools.CombineChunks(split_data_right)
+
+    pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav",numpy.array([merged_data_left,merged_data_right]))
+```
+
+### Example3.py : Processing a live feed with pyaudio
+
 ```python
 
     # Example 2: Creating a live audio stream and processing it by running the data though a lowcut filter.
@@ -82,8 +118,7 @@ pyAudio package and process everything in realtime
     import numpy
     import sys
 
-    pyAudioDspTools.config.sampling_rate = 44100
-    pyAudioDspTools.config.chunk_size = 512
+    pyAudioDspTools.config.initialize(44100, 4096)
 
     filterdevice = pyAudioDspTools.CreateLowCutFilter(300)
 

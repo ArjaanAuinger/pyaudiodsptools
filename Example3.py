@@ -1,29 +1,50 @@
-import numpy
+# Example 2: Creating a live audio stream and processing it by running the data though a lowcut filter.
+# Is MONO.
+# Has to be manually terminated in the IDE.
+
+import pyaudio
 import pyAudioDspTools
+import time
+import numpy
+import sys
 
 pyAudioDspTools.config.initialize(44100, 4096)
 
-# Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
-left_channel, right_channel = pyAudioDspTools.Utility.StereoWavToNumpyFloat("TestFile16BitStereo.wav")
-split_data_left = pyAudioDspTools.MakeChunks(left_channel)
-split_data_right = pyAudioDspTools.MakeChunks(right_channel)
+filterdevice = pyAudioDspTools.CreateLowCutFilter(300)
 
 
-# Creating the class/device, which is a lowcut filter
-filter_device_left = pyAudioDspTools.CreateLowCutFilter(800)
-filter_device_right = pyAudioDspTools.CreateLowCutFilter(800)
+# Instantiate PyAudio
+pyaudioinstance = pyaudio.PyAudio()
+
+# The callback function first reads the current input and converts it to a numpy array, filters it and returns it.
+def callback(in_data, frame_count, time_info, status):
+    in_data = numpy.frombuffer(in_data, dtype=numpy.float32)
+    in_data = filterdevice.apply(in_data)
+    #print(numpydata)
+    return (in_data, pyaudio.paContinue)
 
 
-# Setting a counter and process the chunks via filter_device.apply
-counter = 0
-for counter in range(len(split_data_left)):
-    split_data_left[counter] = filter_device_left.apply(split_data_left[counter])
-    split_data_right[counter] = filter_device_right.apply(split_data_right[counter])
-    counter += 1
+# The stream class of pyaudio. Setting all the variables, pretty self explanatory.
+stream = pyaudioinstance.open(format=pyaudio.paFloat32,
+                channels=1,
+                rate=pyAudioDspTools.config.sampling_rate,
+                input = True,
+                output = True,
+                frames_per_buffer = pyAudioDspTools.config.chunk_size,
+                stream_callback = callback)
 
+# start the stream
+stream.start_stream()
 
-# Merging the numpy-array back into a single big one and write it to a .wav file.
-merged_data_left = pyAudioDspTools.CombineChunks(split_data_left)
-merged_data_right = pyAudioDspTools.CombineChunks(split_data_right)
+# wait
+while stream.is_active():
+    time.sleep(5)
+    print("Cpu load:", stream.get_cpu_load())
 
-pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav",numpy.array([merged_data_left,merged_data_right]))
+# stop stream
+stream.stop_stream()
+stream.close()
+
+# close PyAudio
+pyaudioinstance.terminate()
+sys.exit()
