@@ -51,12 +51,14 @@ from pyAudioDspTools.EffectHardDistortion import CreateHardDistortion
 from pyAudioDspTools.EffectTremolo import CreateTremolo
 from pyAudioDspTools.EffectSaturator import CreateSaturator
 
+test_length_in_samples = 44100*60
+
 print('####Creating Generators####')
-sine_full = CreateSinewave(1000, 4096)
+sine_full = CreateSinewave(1000, test_length_in_samples)
 print('Sine Wave ok...')
-square_full = CreateSquarewave(1000, 4096)
+square_full = CreateSquarewave(1000, test_length_in_samples)
 print('Square Wave ok...')
-noise_full = CreateWhitenoise(4096)
+noise_full = CreateWhitenoise(test_length_in_samples)
 print('White Noise ok..-')
 print('')
 
@@ -86,6 +88,8 @@ print('')
 print('####config.py settings####')
 print('Sample Rate is: ', config.sampling_rate, 'Hz')
 print('Chunk Size / Buffer Size is: ', config.chunk_size, 'samples')
+print('GPU is available: ', config._gpu_available)
+print('GPU is used: ', config.use_gpu)
 print('')
 
 

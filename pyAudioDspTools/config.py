@@ -8,11 +8,13 @@ config.sampling_rate : int
 config.chunk_size : int
     The number of samples in a chunk. Audio professionals might also call this buffer size, as this is the term
     used in a number of DAWs such as Ableton, Logic and Pro Tools.
+config.use_gpu : bool
+    If set to True, the FFT filter will use the GPU for processing. This is only possible if the cupy library is installed.
 
 Notes
 -----
 * To set the sampling rate and config.chunk_size simply overwrite them in your script. Write this in the beginning of your
-script: 'pyAudioDspTools.config.sampling_rate = 48000' or 'pyAudioDspTools.config.chunk_size = 512'
+script: 'pyAudioDspTools.config.initialize(44100, 512)'
 
 """
 
@@ -24,17 +26,15 @@ this = sys.modules[__name__]
 # we can explicitly make assignments on it
 this.sampling_rate = None
 this.chunk_size = None
+this.use_gpu = False
+this._gpu_available = True # Will be overwritten if cupy is not available from __init__.py
 
-def initialize(sampling_rate, chunk_size):
-    if (this.sampling_rate is None and this.chunk_size is None):
+def initialize(sampling_rate, chunk_size, use_gpu=False):
+    #if (this.sampling_rate is None and this.chunk_size is None):
         # also in local function scope. no scope specifier like global is needed
-        this.sampling_rate = sampling_rate
-        this.chunk_size = chunk_size
-        # also the name remains free for local use
-        db_name = "Locally scoped db_name variable. Doesn't do anything here."
-    else:
-        msg = "config.py is already initialized to {0}."
-        raise RuntimeError(msg.format(this.sampling_rate))
-
-#config.sampling_rate = 44100
-#config.chunk_size = 512
+    this.sampling_rate = sampling_rate
+    this.chunk_size = chunk_size
+    this.use_gpu = use_gpu
+    #else:
+        #msg = "config.py is already initialized to {0}."
+        #raise RuntimeError(msg.format(this.sampling_rate))
