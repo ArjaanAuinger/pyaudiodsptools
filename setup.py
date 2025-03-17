@@ -11,7 +11,7 @@ with open('LICENSE') as f:
 
 setup(
     name='pyAudioDspTools',
-    version='0.7.9',
+    version='0.8.3',
     description='Package for audio processing with Numpy',
     long_description=readme,
     author='Arjaan Auinger',
@@ -19,5 +19,6 @@ setup(
     url='https://github.com/ArjaanAuinger/pyaudiodsptools',
     license=license,
     packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=['numpy'],
     python_requires='>=3.6'
 )

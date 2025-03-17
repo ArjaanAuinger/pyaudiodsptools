@@ -5,7 +5,7 @@ from . import config
 try:
     import cupy
 except ImportError:
-    print('pyAudioDspTools: (Info) No cupy-cuda11x or cupy-cuda12x found. GPU rendering not possible.')
+    print('pyAudioDspTools: (Info) No cupy-cuda11x or cupy-cuda12x found. GPU rendering is not possible.')
     config._gpu_available = False
 
 from .Generators import CreateSinewave, CreateSquarewave, CreateWhitenoise

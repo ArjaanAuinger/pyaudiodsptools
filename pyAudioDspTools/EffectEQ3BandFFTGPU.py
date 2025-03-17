@@ -23,7 +23,9 @@ Optimal operation with config.chunk_size=512
 
 
 class CreateEQ3BandFFTGPU:
-    """Creating a 3Band FFT EQ audio-effect class/device.
+    """Creating a 3 Band FFT Equalizer class/device using the GPU.
+    The only difference to the non GPU version is the use of cupy instead of numpy.
+    If you want to learn, please check the non GPU version first.
 
     Can be used to manipulate frequencies in your audio cupy-array.
     Is the faster one, the slower, non FFT based one being CreateEQ3Band.
