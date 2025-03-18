@@ -1,4 +1,4 @@
-# Make sure you have cupy installed for this example.
+# Make sure you have cupy installed for this example. pyAudioDspTools will warn you if it cannot find the package.
 import pyAudioDspTools
 
 pyAudioDspTools.config.initialize(44100, 4096)

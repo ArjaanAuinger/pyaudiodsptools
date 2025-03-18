@@ -29,14 +29,18 @@ The package is only a few kB in size, so it should download in an instant. After
 
 pyAudioDspTools is device centered. Every sound effect processor is a class, imagine it being like an audio-device. You first create a class/device with certain settings and then run some numpy-arrays (which is your audio data) through them. This always follows a few simple steps, depending on if you want to modify data from a .wav file or realtime-stream. All classes are ready for realtime streaming and manage all relevant variables themselves.
 
-image of pipeline here
+If you have an RTX GPU and the the Cuda 11 or 12 toolkit installed, you can also install cupy for GPU processing of the FFT version of the filters as well as the 3 Band EQ:
+
+  `pip install cupy-cuda11x` or `pip install cupy-cuda12x`
+
+If you need more info you can visit the cupy website.
 
 
 ## Using pyAudioDspTools
 
-Below you will find 2 simple examples of processing your data. Example 1 will read a .wav
-file, process the data and write it to a second .wav file. Example 2 will create a stream via the
-pyAudio package and process everything in realtime
+Below you will find a few simple examples of processing your data. Example 1 will read a .wav
+file, process the data and write it to a second .wav file. Example 2 will do the same, but with a stereo file. Example 3 will create a stream via the
+pyAudio package and process everything in realtime. Example 4 is the same as Example 1, but using cupy and GPU acceleration.
 
 
 ### Example1.py : Processing from a .wav file.
@@ -44,12 +48,11 @@ pyAudio package and process everything in realtime
 ```python
 
     import pyAudioDspTools
-    
-    pyAudioDspTools.config.sampling_rate = 44100
-    pyAudioDspTools.config.chunk_size = 512
+
+    pyAudioDspTools.config.initialize(44100, 4096)
 
     # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
-    full_data = pyAudioDspTools.MonoWavToNumpyFloat("some_path/your_audiofile.wav")
+    full_data = pyAudioDspTools.Utility.MonoWavToNumpyFloat("TestFile16BitMono.wav")
     split_data = pyAudioDspTools.MakeChunks(full_data)
 
 
@@ -66,10 +69,47 @@ pyAudio package and process everything in realtime
 
     # Merging the numpy-array back into a single big one and write it to a .wav file.
     merged_data = pyAudioDspTools.CombineChunks(split_data)
-    pyAudioDspTools.NumpyFloatToWav("some_path/output_audiofile.wav", merged_data)
+    pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav", merged_data)
 ```
 
-### Example2.py : Processing a live feed with pyaudio
+
+### Example2.py : Stereo Processing from a .wav file.
+
+```python
+
+    import numpy
+    import pyAudioDspTools
+
+    pyAudioDspTools.config.initialize(44100, 4096)
+
+    # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
+    left_channel, right_channel = pyAudioDspTools.Utility.StereoWavToNumpyFloat("TestFile16BitStereo.wav")
+    split_data_left = pyAudioDspTools.MakeChunks(left_channel)
+    split_data_right = pyAudioDspTools.MakeChunks(right_channel)
+
+
+    # Creating the class/device, which is a lowcut filter
+    filter_device_left = pyAudioDspTools.CreateLowCutFilter(800)
+    filter_device_right = pyAudioDspTools.CreateLowCutFilter(800)
+
+
+    # Setting a counter and process the chunks via filter_device.apply
+    counter = 0
+    for counter in range(len(split_data_left)):
+        split_data_left[counter] = filter_device_left.apply(split_data_left[counter])
+        split_data_right[counter] = filter_device_right.apply(split_data_right[counter])
+        counter += 1
+
+
+    # Merging the numpy-array back into a single big one and write it to a .wav file.
+    merged_data_left = pyAudioDspTools.CombineChunks(split_data_left)
+    merged_data_right = pyAudioDspTools.CombineChunks(split_data_right)
+
+    pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav",numpy.array([merged_data_left,merged_data_right]))
+```
+
+### Example3.py : Processing a live feed with pyaudio
+
 ```python
 
     # Example 2: Creating a live audio stream and processing it by running the data though a lowcut filter.
@@ -82,8 +122,7 @@ pyAudio package and process everything in realtime
     import numpy
     import sys
 
-    pyAudioDspTools.config.sampling_rate = 44100
-    pyAudioDspTools.config.chunk_size = 512
+    pyAudioDspTools.config.initialize(44100, 4096)
 
     filterdevice = pyAudioDspTools.CreateLowCutFilter(300)
 
@@ -123,4 +162,33 @@ pyAudio package and process everything in realtime
     # close PyAudio 
     pyaudioinstance.terminate()
     sys.exit()
+```
+
+### Example4.py : Processing from a .wav file using cupy and GPU acceleration.
+```python
+
+    # Make sure you have cupy installed for this example. pyAudioDspTools will warn you if it cannot find the package.
+    import pyAudioDspTools
+
+    pyAudioDspTools.config.initialize(44100, 4096)
+
+    # Importing a mono .wav file and then splitting the resulting numpy-array in smaller chunks.
+    full_data = pyAudioDspTools.Utility.MonoWavToNumpyFloat("TestFile16BitMono.wav")
+    split_data = pyAudioDspTools.MakeChunks(full_data)
+
+
+    # Creating the class/device, which is a lowcut filter
+    filter_device = pyAudioDspTools.CreateLowCutFilterGPU(800)
+
+
+    # Setting a counter and process the chunks via filter_device.apply
+    counter = 0
+    for counter in range(len(split_data)):
+        split_data[counter] = filter_device.apply(split_data[counter])
+        counter += 1
+
+
+    # Merging the numpy-array back into a single big one and write it to a .wav file.
+    merged_data = pyAudioDspTools.CombineChunks(split_data)
+    pyAudioDspTools.NumpyFloatToWav("output_audiofile.wav", merged_data)
 ```
